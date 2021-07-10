@@ -1,6 +1,9 @@
 # OBS Stats on Stream
 The script allow to display certain technical data on stream.
 
+<img src="https://i.imgur.com/mMwbHpw.png" />
+<img src="https://i.imgur.com/X9v9DQ5.png" />
+
 # How to use
 1. Download the script.
 2. Add a Text(GDI+) Source to your scene. This source will be used to display the data.
