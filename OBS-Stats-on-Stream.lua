@@ -22,6 +22,7 @@ local script_active = false
 local show_lagged_frames = true
 local show_skipped_frames = true
 local show_dropped_frames = true
+local show_congestion = false
 
 local obsffi
 if ffi.os == "OSX" then
@@ -51,7 +52,7 @@ function timer_callback()
 
 	local output_frames = 0
 	local output_dropped = 0
-	--local output_congestion = 0.0
+	local output_congestion = 0.0
 	
 	render_frames = obs.obs_get_total_frames()
 	render_lagged = obs.obs_get_lagged_frames()
@@ -70,7 +71,7 @@ function timer_callback()
 	if output ~= nil then
 		output_frames = obs.obs_output_get_total_frames(output)
 		output_dropped = obs.obs_output_get_frames_dropped(output)
-		--output_congestion = obs.obs_output_get_congestion(output)
+		output_congestion = obs.obs_output_get_congestion(output)
 		obs.obs_output_release(output)
 	end
 	
@@ -116,6 +117,12 @@ function timer_callback()
 			formattedString = formattedString .. "\n"
 		end
 		formattedString = formattedString .. "Dropped frames: " .. tostring(output_dropped) .. "/" .. tostring(output_frames) .. " (" .. dropped_percents .. "%)"
+	end
+	if show_dropped_frames then
+		if show_lagged_frames or show_skipped_frames or show_dropped_frames then
+			formattedString = formattedString .. "\n"
+		end
+		formattedString = formattedString .. "Congestion: " .. string.format("%.5g", output_congestion)
 	end
 
 	local settings = obs.obs_data_create()
@@ -173,6 +180,8 @@ function script_properties()
 	
 	local show_dropped_frames_prop = obs.obs_properties_add_bool(props, "show_dropped_frames", "Show Dropped Frames")
 	
+	local show_congestion_prop = obs.obs_properties_add_bool(props, "show_congestion", "Show Congestion")
+	
 	return props
 end
 
@@ -183,6 +192,7 @@ function script_defaults(settings)
 	obs.obs_data_set_default_bool(settings, "show_lagged_frames", true)
 	obs.obs_data_set_default_bool(settings, "show_skipped_frames", true)
 	obs.obs_data_set_default_bool(settings, "show_dropped_frames", true)
+	obs.obs_data_set_default_bool(settings, "show_congestion", false)
 end
 
 function script_update(settings)
@@ -192,7 +202,8 @@ function script_update(settings)
 	show_lagged_frames = obs.obs_data_get_bool(settings, "show_lagged_frames")
 	show_skipped_frames = obs.obs_data_get_bool(settings, "show_skipped_frames")
 	show_dropped_frames = obs.obs_data_get_bool(settings, "show_dropped_frames")
-
+	show_dropped_frames = obs.obs_data_get_bool(settings, "show_congestion")
+	
 	if script_active then
 		obs.timer_remove(timer_callback)
 		obs.timer_add(timer_callback, callback_delay)
