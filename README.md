@@ -1,2 +1,2 @@
-# obs-stats-on_stream
-A script for OBS that shows lagged frames, skipped frames and dropped frames on your stream.
+# OBS Stats on Stream
+The Script allow to display certain technical data on stream.
