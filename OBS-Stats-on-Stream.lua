@@ -164,7 +164,8 @@ function script_properties()
 	
 	local show_lagged_frames_prop = obs.obs_properties_add_bool(props, "show_lagged_frames", "Show Lagged Frames")
 	
-	local show_skipped_frames_prop = obs.obs_properties_add_bool(props, "show_skipped_frames", "Show Skipped Frames due to Rendering Lag")
+	local show_skipped_frames_prop = obs.obs_properties_add_bool(props, "show_skipped_frames", "Show Skipped Frames")
+	obs.obs_property_set_long_description(callback_delay_prop, "Show Skipped Frames due to Rendering Lag.")
 	
 	local show_dropped_frames_prop = obs.obs_properties_add_bool(props, "show_dropped_frames", "Show Dropped Frames")
 	
