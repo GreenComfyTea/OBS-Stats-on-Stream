@@ -147,7 +147,7 @@ function script_properties()
 	obs.obs_property_list_add_string(output_mode_prop, "Advanced", "adv_stream")
 	obs.obs_property_set_long_description(output_mode_prop, "Must match the OBS streaming mode you are using.")
 	
-	local callback_delay_prop = obs.obs_properties_add_int(props, "callback_delay", "Update Delay", 100, 1000, 100)
+	local callback_delay_prop = obs.obs_properties_add_int(props, "callback_delay", "Update Delay (ms)", 100, 1000, 100)
 	obs.obs_property_set_long_description(callback_delay_prop, "Determines how often the data will update.")
 	
 	local text_source_prop = obs.obs_properties_add_list(props,
