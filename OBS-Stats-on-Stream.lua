@@ -97,21 +97,25 @@ function timer_callback()
 	"Congestion: " .. tostring(output_congestion)
 	--]]
 	
+	local lagged_percents = string.format("%.1f", 100.0 * render_lagged / render_frames)
+	local skipped_percents = string.format("%.1f", 100.0 * encoder_skipped / encoder_frames)
+	local dropped_percents = string.format("%.1f", 100.0 * output_dropped / output_frames)
+	
 	local formattedString = ""
 	if show_lagged_frames then
-		formattedString = formattedString .. "Lagged frames: " .. tostring(render_lagged) .. "/" .. tostring(render_frames)
+		formattedString = formattedString .. "Lagged frames: " .. tostring(render_lagged) .. "/" .. tostring(render_frames) .. " (" .. lagged_percents .. "%)"
 	end
 	if show_skipped_frames then
 		if show_lagged_frames then
 			formattedString = formattedString .. "\n"
 		end
-		formattedString = formattedString .. "Skipped frames: " .. tostring(encoder_skipped) .. "/" .. tostring(encoder_frames)
+		formattedString = formattedString .. "Skipped frames: " .. tostring(encoder_skipped) .. "/" .. tostring(encoder_frames) .. " (" .. skipped_percents .. "%)"
 	end
 	if show_dropped_frames then
 		if show_lagged_frames or show_skipped_frames then
 			formattedString = formattedString .. "\n"
 		end
-		formattedString = formattedString .. "Dropped frames: " .. tostring(output_dropped) .. "/" .. tostring(output_frames)
+		formattedString = formattedString .. "Dropped frames: " .. tostring(output_dropped) .. "/" .. tostring(output_frames) .. " (" .. dropped_percents .. "%)"
 	end
 
 	local settings = obs.obs_data_create()
