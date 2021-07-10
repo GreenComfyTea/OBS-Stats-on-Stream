@@ -1,5 +1,5 @@
 # OBS Stats on Stream
-The Script allow to display certain technical data on stream.
+The script allow to display certain technical data on stream.
 
 # How to use
 1. Download the script.
