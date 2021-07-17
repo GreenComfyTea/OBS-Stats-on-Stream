@@ -34,7 +34,7 @@ end
 
 
 function timer_callback()
-	print("callback " .. output_mode)
+	-- print("callback " .. output_mode)
 	
 	local source = obs.obs_get_source_by_name(text_source)
 	if source == nil then
@@ -163,7 +163,7 @@ function script_properties()
 	if sources ~= nil then
 		for _, source in ipairs(sources) do
 			local source_id = obs.obs_source_get_id(source)
-			if source_id == "text_gdiplus_v2" then
+			if source_id == "text_gdiplus_v2" or source_id == "text_ft2_source_v2" then
 				local name = obs.obs_source_get_name(source)
 				obs.obs_property_list_add_string(text_source_prop, name, name)
 			end
@@ -211,7 +211,7 @@ function script_update(settings)
 end
 
 function script_description()
-	return "Prints stream bitrate, dropped frames, frames missed due to rendering lag, skipped frames due to encoding lag."
+	return "Shows lagged frames, skipped frames, dropped frames and congestion on stream as text source."
 end
 
 
