@@ -158,7 +158,7 @@ function script_properties()
 	obs.obs_property_set_long_description(callback_delay_prop, "Determines how often the data will update.")
 	
 	local text_source_prop = obs.obs_properties_add_list(props,
-		"text_source", "Text(GDI+) Source", obs.OBS_COMBO_TYPE_EDITABLE, obs.OBS_COMBO_FORMAT_STRING)
+		"text_source", "Text Source", obs.OBS_COMBO_TYPE_EDITABLE, obs.OBS_COMBO_FORMAT_STRING)
 	local sources = obs.obs_enum_sources()
 	if sources ~= nil then
 		for _, source in ipairs(sources) do
@@ -171,7 +171,7 @@ function script_properties()
 	end
 	obs.source_list_release(sources)
 	obs.obs_property_set_long_description(text_source_prop,
-		"Text(GDI+) source that will be used to display the data.")
+		"Text source that will be used to display the data.")
 	
 	local show_lagged_frames_prop = obs.obs_properties_add_bool(props, "show_lagged_frames", "Show Lagged Frames")
 	
