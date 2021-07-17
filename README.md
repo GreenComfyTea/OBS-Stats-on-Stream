@@ -6,12 +6,12 @@ The script allow to display certain technical data on stream.
 
 # How to use
 1. Download the script.
-2. Add a Text(GDI+) Source to your scene. This source will be used to display the data.
+2. Add a text source to your scene. This source will be used to display the data.
 3. Open Tools -> Scripts. Add the script.
 4. Configure the script.
     * Output Mode must match the OBS encoder mode. Check it by going OBS -> Settings -> Output -> Output Mode (on the very top).
     * Update Delay determines how often the data will be updated. 1000 ms means once a second. 100 ms means 10 times a second.
-    * Choose the name of your created Text(GDI+) Source.
+    * Choose the name of your created text source.
     * Check and/or uncheck what you want to display.
 5. You are ready to go!
 
