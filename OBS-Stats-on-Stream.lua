@@ -17,12 +17,14 @@ video_t *obs_get_video(void);
 local output_mode = "simple_stream"
 local callback_delay = 1000
 local text_source = ""
-local script_active = false
 
 local show_lagged_frames = true
 local show_skipped_frames = true
 local show_dropped_frames = true
 local show_congestion = false
+
+local is_script_enabled = true
+local is_timer_on = false
 
 local obsffi
 if ffi.os == "OSX" then
@@ -33,15 +35,10 @@ else
 end
 
 
-function timer_callback()
-	-- print("callback " .. output_mode)
+function timer_tick()
+	--print("callback " .. output_mode)
 	
 	local source = obs.obs_get_source_by_name(text_source)
-	if source == nil then
-		print("no source, removing callback")
-		obs.remove_current_callback()
-		return
-	end
 	
 	local render_frames = 0
 	local render_lagged = 0
@@ -133,21 +130,24 @@ function timer_callback()
 end
 
 function on_event(event)
-	
-	if event == obs.OBS_FRONTEND_EVENT_STREAMING_STARTED then
-		print("streaming started")
-		script_active = true
-		obs.timer_add(timer_callback, callback_delay)
-	end
-	if event == obs.OBS_FRONTEND_EVENT_STREAMING_STOPPED then
-		print("streaming stopped")
-		script_active = false
-		obs.timer_remove(timer_callback)
+	if event == obs.OBS_FRONTEND_EVENT_FINISHED_LOADING then
+		print("scene loaded")
+		
+		local source = obs.obs_get_source_by_name(text_source)
+		if is_script_enabled and source ~= nil then
+			print("script is enabled")
+			is_timer_on = true
+			obs.timer_add(timer_tick, callback_delay)
+		end
+		
+		obs.obs_source_release(source)
 	end
 end
 		
 function script_properties()
 	local props = obs.obs_properties_create()
+
+	local enable_script_prop = obs.obs_properties_add_bool(props, "is_script_enabled", "Enable Script")
 
 	local output_mode_prop = obs.obs_properties_add_list(props, "output_mode", "Output Mode", obs.OBS_COMBO_TYPE_LIST, obs.OBS_COMBO_FORMAT_STRING)
 	obs.obs_property_list_add_string(output_mode_prop, "Simple", "simple_stream")
@@ -186,6 +186,7 @@ function script_properties()
 end
 
 function script_defaults(settings)
+	obs.obs_data_set_default_bool(settings, "is_script_enabled", true)
 	obs.obs_data_set_default_string(settings, "output_mode", "simple_stream")
 	obs.obs_data_set_default_int(settings, "callback_delay", 1000)
 	obs.obs_data_set_default_string(settings, "text_source", "")
@@ -196,6 +197,7 @@ function script_defaults(settings)
 end
 
 function script_update(settings)
+	is_script_enabled = obs.obs_data_get_bool(settings, "is_script_enabled")
 	output_mode = obs.obs_data_get_string(settings, "output_mode")
 	callback_delay = obs.obs_data_get_int(settings, "callback_delay")
 	text_source = obs.obs_data_get_string(settings, "text_source")
@@ -204,24 +206,35 @@ function script_update(settings)
 	show_dropped_frames = obs.obs_data_get_bool(settings, "show_dropped_frames")
 	show_dropped_frames = obs.obs_data_get_bool(settings, "show_congestion")
 	
-	if script_active then
-		obs.timer_remove(timer_callback)
-		obs.timer_add(timer_callback, callback_delay)
+	local source = obs.obs_get_source_by_name(text_source)
+	if source == nil then
+		print("No source found")
+		is_timer_on = false
+		obs.timer_remove(timer_tick)
+		return
 	end
+	
+	obs.obs_source_release(source)
+	
+	if not is_script_enabled then
+		print("Script is disabled")
+		is_timer_on = false
+		obs.timer_remove(timer_tick)
+		return
+	end
+	
+	print("Script is reloaded")
+	if is_timer_on then
+		obs.timer_remove(timer_tick)
+	end
+	obs.timer_add(timer_tick, callback_delay)
 end
 
 function script_description()
 	return "Shows lagged frames, skipped frames, dropped frames and congestion on stream as text source."
 end
 
-
 function script_load(settings)
 	print("script loaded")
 	obs.obs_frontend_add_event_callback(on_event)
-	
-	if(obs.obs_frontend_streaming_active()) then
-		print("streaming in progress")
-		script_active = true
-		obs.timer_add(timer_callback, callback_delay)
-	end
 end
