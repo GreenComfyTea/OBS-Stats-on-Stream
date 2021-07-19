@@ -1,7 +1,7 @@
 # OBS Stats on Stream
 The script allow to display certain technical data on stream.
 
-<img src="https://i.imgur.com/rWx2v35.png" />
+<img src="https://i.imgur.com/f4VYqQJ.png" />
 <img src="https://i.imgur.com/mBJLi4g.png" />
 
 # How to use
