@@ -23,6 +23,18 @@ local show_skipped_frames = true
 local show_dropped_frames = true
 local show_congestion = false
 
+local render_lagged_string = ""
+
+local encoder_skipped_string = ""
+--encoder_framerate_string = ""
+
+local output_dropped_string = ""
+local output_congestion_string = ""
+
+local lagged_percents_string = ""
+local skipped_percents_string = ""
+local dropped_percents_string = ""
+
 local is_script_enabled = true
 local is_timer_on = false
 
@@ -69,6 +81,7 @@ function timer_tick()
 		output_frames = obs.obs_output_get_total_frames(output)
 		output_dropped = obs.obs_output_get_frames_dropped(output)
 		output_congestion = obs.obs_output_get_congestion(output)
+		--local output_connect_time = obs.obs_output_get_connect_time_ms(output)
 		obs.obs_output_release(output)
 	end
 	
@@ -95,52 +108,59 @@ function timer_tick()
 	"Congestion: " .. tostring(output_congestion)
 	--]]
 	
-	local lagged_percents = string.format("%.1f", 100.0 * render_lagged / render_frames)
-	local skipped_percents = string.format("%.1f", 100.0 * encoder_skipped / encoder_frames)
-	local dropped_percents = string.format("%.1f", 100.0 * output_dropped / output_frames)
+	render_lagged_string = tostring(render_lagged) .. "/" .. tostring(render_frames)
+
+	encoder_skipped_string = tostring(encoder_skipped) .. "/" .. tostring(encoder_frames)
+	--encoder_framerate_string = tostring(encoder_framerate)
+
+	output_dropped_string = tostring(output_dropped) .. "/" .. tostring(output_frames)
+	output_congestion_string = string.format("%.2g", 100 * output_congestion)
+	
+	lagged_percents_string = string.format("%.1f", 100.0 * render_lagged / render_frames)
+	skipped_percents_string = string.format("%.1f", 100.0 * encoder_skipped / encoder_frames)
+	dropped_percents_string = string.format("%.1f", 100.0 * output_dropped / output_frames)
 	
 	local formattedString = ""
 	if show_lagged_frames then
-		formattedString = formattedString .. "Lagged frames: " .. tostring(render_lagged) .. "/" .. tostring(render_frames) .. " (" .. lagged_percents .. "%)"
+		formattedString = formattedString .. "Lagged frames: " .. render_lagged_string .. " (" .. lagged_percents_string .. "%)"
 	end
 	if show_skipped_frames then
 		if show_lagged_frames then
 			formattedString = formattedString .. "\n"
 		end
-		formattedString = formattedString .. "Skipped frames: " .. tostring(encoder_skipped) .. "/" .. tostring(encoder_frames) .. " (" .. skipped_percents .. "%)"
+		formattedString = formattedString .. "Skipped frames: " .. encoder_skipped_string .. " (" .. skipped_percents_string .. "%)"
 	end
 	if show_dropped_frames then
 		if show_lagged_frames or show_skipped_frames then
 			formattedString = formattedString .. "\n"
 		end
-		formattedString = formattedString .. "Dropped frames: " .. tostring(output_dropped) .. "/" .. tostring(output_frames) .. " (" .. dropped_percents .. "%)"
+		formattedString = formattedString .. "Dropped frames: " .. output_dropped_string .. " (" .. dropped_percents_string .. "%)"
 	end
 	if show_dropped_frames then
 		if show_lagged_frames or show_skipped_frames or show_dropped_frames then
 			formattedString = formattedString .. "\n"
 		end
-		formattedString = formattedString .. "Congestion: " .. string.format("%.5g", output_congestion)
+		formattedString = formattedString .. "Congestion: " .. output_congestion_string .. "%"
 	end
 
-	local settings = obs.obs_data_create()
-	obs.obs_data_set_string(settings, "text", formattedString)
-	obs.obs_source_update(source, settings)
-	obs.obs_source_release(source)
-	obs.obs_data_release(settings)
+	if source ~= nil then
+		local settings = obs.obs_data_create()
+		obs.obs_data_set_string(settings, "text", formattedString)
+		obs.obs_source_update(source, settings)
+		obs.obs_source_release(source)
+		obs.obs_data_release(settings)
+	end
 end
 
 function on_event(event)
 	if event == obs.OBS_FRONTEND_EVENT_FINISHED_LOADING then
 		print("scene loaded")
 		
-		local source = obs.obs_get_source_by_name(text_source)
-		if is_script_enabled and source ~= nil then
+		if is_script_enabled then
 			print("script is enabled")
 			is_timer_on = true
 			obs.timer_add(timer_tick, callback_delay)
 		end
-		
-		obs.obs_source_release(source)
 	end
 end
 		
@@ -181,6 +201,7 @@ function script_properties()
 	local show_dropped_frames_prop = obs.obs_properties_add_bool(props, "show_dropped_frames", "Show Dropped Frames")
 	
 	local show_congestion_prop = obs.obs_properties_add_bool(props, "show_congestion", "Show Congestion")
+	obs.obs_property_set_long_description(show_congestion_prop, "The congestion value. This value is used to visualize the current congestion of a network output. For example, if there is no congestion, the value will be 0%, if it’s fully congested, the value will be 100%.")
 	
 	return props
 end
