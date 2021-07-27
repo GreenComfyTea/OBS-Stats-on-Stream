@@ -30,6 +30,7 @@ local encoder_skipped_string = ""
 
 local output_dropped_string = ""
 local output_congestion_string = ""
+local output_congestion_avg_string = ""
 
 local lagged_percents_string = ""
 local skipped_percents_string = ""
@@ -37,6 +38,9 @@ local dropped_percents_string = ""
 
 local is_script_enabled = true
 local is_timer_on = false
+
+local output_congestion_cumulative = 0
+local total_ticks = 0
 
 local obsffi
 if ffi.os == "OSX" then
@@ -49,6 +53,8 @@ end
 
 function timer_tick()
 	--print("callback " .. output_mode)
+	
+	total_ticks = total_ticks + 1
 	
 	local source = obs.obs_get_source_by_name(text_source)
 	
@@ -63,6 +69,38 @@ function timer_tick()
 	local output_dropped = 0
 	local output_congestion = 0.0
 	
+	
+	-- Not working for some reason?
+	--[[
+	local dst = ""
+	obs.os_get_config_path(dst, #dst, "obs-studio")
+	print("path: " .. dst)
+	--]]
+	
+	-- Not working for some reason?
+	--[[
+	local cpu_usage_info = obsffi.os_cpu_usage_info_start()
+	print("cpu info null: " .. tostring(cpu_usage_info == nil))
+	if cpu_usage_info ~= nil then
+		local cpu_usage = obsffi.os_cpu_usage_info_query(cpu_usage_info)
+		obsffi.os_cpu_usage_info_destroy(cpu_usage_info)
+		print("cpu: " ..cpu_usage)
+	end
+	--]]
+	
+	--local profile = obs.obs_frontend_get_current_profile()
+	--print("profile: " .. profile)
+	
+	--local profile_path = "                                                                                                                                                                                                                                                               "
+	--obs.os_get_config_path(profile_path, #profile_path, "obs-studio\\basic\\profiles\\" ..profile .. "\\basic.ini")
+	--print("path: " .. profile_path)
+	
+	--local config = nil
+	--local config_open_success = obs.config_open(config, profile_path, 0)
+	--print("success: " .. tostring(config_open_success))
+	
+	--obs.config_close(config)
+	
 	render_frames = obs.obs_get_total_frames()
 	render_lagged = obs.obs_get_lagged_frames()
 	
@@ -72,6 +110,7 @@ function timer_tick()
 			encoder_frames = obsffi.video_output_get_total_frames(video)
 			encoder_skipped = obsffi.video_output_get_skipped_frames(video)
 			--encoder_framerate =  obsffi.video_output_get_frame_rate(video);
+			
 		end
 	end
 	
@@ -84,6 +123,8 @@ function timer_tick()
 		--local output_connect_time = obs.obs_output_get_connect_time_ms(output)
 		obs.obs_output_release(output)
 	end
+	
+	output_congestion_cumulative = output_congestion_cumulative + output_congestion
 	
 	--h264	???
 	--obs_x264
@@ -115,6 +156,7 @@ function timer_tick()
 
 	output_dropped_string = tostring(output_dropped) .. "/" .. tostring(output_frames)
 	output_congestion_string = string.format("%.2g", 100 * output_congestion)
+	output_congestion_avg_string = string.format("%.2g", 100 * output_congestion_cumulative / total_ticks)
 	
 	lagged_percents_string = string.format("%.1f", 100.0 * render_lagged / render_frames)
 	skipped_percents_string = string.format("%.1f", 100.0 * encoder_skipped / encoder_frames)
@@ -140,7 +182,7 @@ function timer_tick()
 		if show_lagged_frames or show_skipped_frames or show_dropped_frames then
 			formattedString = formattedString .. "\n"
 		end
-		formattedString = formattedString .. "Congestion: " .. output_congestion_string .. "%"
+		formattedString = formattedString .. "Congestion: " .. output_congestion_string .. "% (avg. " .. output_congestion_avg_string .. "%)"
 	end
 
 	if source ~= nil then
