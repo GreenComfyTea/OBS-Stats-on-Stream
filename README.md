@@ -1,8 +1,8 @@
 # OBS Stats on Stream
 The script allow to display certain technical data on stream.
 
-<img src="https://i.imgur.com/f4VYqQJ.png" />
-<img src="https://i.imgur.com/mBJLi4g.png" />
+<img src="https://i.imgur.com/uYnrxJ8.png" />
+<img src="https://i.imgur.com/icwCsyg.png" />
 
 # How to use
 1. Download the script.
@@ -16,9 +16,7 @@ The script allow to display certain technical data on stream.
 5. You are ready to go!
 
 # TODO
-* Add bitrate.
-* Add framerate.
-* Add feature to print the data in chat triggered by a command !obsstats.
+* Print the data in chat triggered by a command !obsstats. ---> is it even possible?
 
 # Contribution
 
