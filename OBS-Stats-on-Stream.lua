@@ -69,6 +69,7 @@ function timer_tick()
 	local source = obs.obs_get_source_by_name(text_source);
 	
 	-- Not working for some reason?
+	-- I want to detect output mode automatically.
 	--[[
 	local dst = ""
 	obs.os_get_config_path(dst, #dst, "obs-studio")
