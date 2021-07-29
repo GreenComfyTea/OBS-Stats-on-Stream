@@ -3,89 +3,76 @@ local ffi = require("ffi")
 
 ffi.cdef[[
 
-struct video_output;
-typedef struct video_output video_t;
+	struct video_output;
+	typedef struct video_output video_t;
 
-uint32_t video_output_get_skipped_frames(const video_t *video);
-uint32_t video_output_get_total_frames(const video_t *video);
-double video_output_get_frame_rate(const video_t *video);
-uint64_t video_output_get_frame_time(const video_t *video);
+	uint32_t video_output_get_skipped_frames(const video_t *video);
+	uint32_t video_output_get_total_frames(const video_t *video);
+	double video_output_get_frame_rate(const video_t *video);
 
-video_t *obs_get_video(void);
+	video_t *obs_get_video(void);
 ]]
 
-local output_mode = "simple_stream"
-local callback_delay = 1000
-local text_source = ""
+local output_mode = "simple_stream";
+local callback_delay = 1000;
+local text_source = "";
 
-local show_lagged_frames = true
-local show_skipped_frames = true
-local show_dropped_frames = true
-local show_congestion = false
+local show_lagged_frames = true;
+local show_skipped_frames = true;
+local show_dropped_frames = true;
+local show_congestion = true;
+local show_bitrate = true;
+local show_memory_usage = true;
+local show_fps = true;
+local show_average_frame_time = true;
 
-local render_lagged_string = ""
+local lagged_frames_string = "";
+local lagged_percents_string = "";
 
-local encoder_skipped_string = ""
---encoder_framerate_string = ""
+local skipped_frames_string = "";
+local skipped_percents_string = "";
 
-local output_dropped_string = ""
-local output_congestion_string = ""
-local output_congestion_avg_string = ""
+local dropped_frames_string = "";
+local dropped_percents_string = "";
 
-local lagged_percents_string = ""
-local skipped_percents_string = ""
-local dropped_percents_string = ""
+local congestion_string = "";
+local average_congestion_string = "";
+local bitrate_string = "";
 
-local is_script_enabled = true
-local is_timer_on = false
+local memory_usage_string = "";
+local fps_string = "";
+local average_frame_time_string = "";
 
-local output_congestion_cumulative = 0
-local total_ticks = 0
+local last_bitrate = 0;
+local last_bytes_sent = 0;
+local last_bytes_sent_time = 0;
 
-local obsffi
+
+local is_script_enabled = true;
+local is_timer_on = false;
+
+local total_ticks = 0;
+local congestion_cumulative = 0;
+local bitrate_cumulative = 0;
+
+local obsffi;
 if ffi.os == "OSX" then
-	obsffi = ffi.load("obs.0.dylib") -- OS X
+	obsffi = ffi.load("obs.0.dylib"); -- OS X
 else
-	obsffi = ffi.load("obs") -- Windows
+	obsffi = ffi.load("obs"); -- Windows
 	-- Linux?
 end
 
-
 function timer_tick()
-	--print("callback " .. output_mode)
+	total_ticks = total_ticks + 1;
 	
-	total_ticks = total_ticks + 1
-	
-	local source = obs.obs_get_source_by_name(text_source)
-	
-	local render_frames = 0
-	local render_lagged = 0
-
-	local encoder_frames = 0
-	local encoder_skipped = 0
-	--local encoder_framerate = 0.0
-
-	local output_frames = 0
-	local output_dropped = 0
-	local output_congestion = 0.0
-	
+	local source = obs.obs_get_source_by_name(text_source);
 	
 	-- Not working for some reason?
 	--[[
 	local dst = ""
 	obs.os_get_config_path(dst, #dst, "obs-studio")
 	print("path: " .. dst)
-	--]]
-	
-	-- Not working for some reason?
-	--[[
-	local cpu_usage_info = obsffi.os_cpu_usage_info_start()
-	print("cpu info null: " .. tostring(cpu_usage_info == nil))
-	if cpu_usage_info ~= nil then
-		local cpu_usage = obsffi.os_cpu_usage_info_query(cpu_usage_info)
-		obsffi.os_cpu_usage_info_destroy(cpu_usage_info)
-		print("cpu: " ..cpu_usage)
-	end
 	--]]
 	
 	--local profile = obs.obs_frontend_get_current_profile()
@@ -101,203 +88,290 @@ function timer_tick()
 	
 	--obs.config_close(config)
 	
-	render_frames = obs.obs_get_total_frames()
-	render_lagged = obs.obs_get_lagged_frames()
+	--Not working for some reason?
+	--local cpu_info = obs.os_cpu_usage_info_start();
+	--local usage = obs.os_cpu_usage_info_query(cpu_info);
+	--print(tostring(usage));
+	--obs.os_cpu_usage_info_destroy(cpu_info);
+	
+	
+	-- Get memory usage
+	local memory_usage = obs.os_get_proc_resident_size() / (1024.0 * 1024.0);
+	
+	-- Get FPS/framerate
+	local fps = obs.obs_get_active_fps();
+	
+	-- Get average time to render frame
+	local average_frame_time = obs.obs_get_average_frame_time_ns() / 1000000.0;
+	
+	-- Get lagged/missed frames
+	local rendered_frames = obs.obs_get_total_frames();
+	local lagged_frames = obs.obs_get_lagged_frames();
+	
+	-- Get skipped frames
+	local encoded_frames = 0;
+	local skipped_frames = 0;
 	
 	if obsffi ~= nil then
-		local video = obsffi.obs_get_video()
+		local video = obsffi.obs_get_video();
 		if video ~= nil then
-			encoder_frames = obsffi.video_output_get_total_frames(video)
-			encoder_skipped = obsffi.video_output_get_skipped_frames(video)
-			--encoder_framerate =  obsffi.video_output_get_frame_rate(video);
-			
+			encoded_frames = obsffi.video_output_get_total_frames(video);
+			skipped_frames = obsffi.video_output_get_skipped_frames(video);
 		end
 	end
 	
-	local output = obs.obs_get_output_by_name(output_mode)
+	-- Get dropped frames, congestion and total bytes
+	local total_frames = 0;
+	local dropped_frames = 0;
+	local congestion = 0.0;
+	local total_bytes = 0;
+
+	local output = obs.obs_get_output_by_name(output_mode);
 	-- output will be nil when not actually streaming
 	if output ~= nil then
-		output_frames = obs.obs_output_get_total_frames(output)
-		output_dropped = obs.obs_output_get_frames_dropped(output)
-		output_congestion = obs.obs_output_get_congestion(output)
-		--local output_connect_time = obs.obs_output_get_connect_time_ms(output)
-		obs.obs_output_release(output)
+		total_frames = obs.obs_output_get_total_frames(output);
+		dropped_frames = obs.obs_output_get_frames_dropped(output);
+		congestion = obs.obs_output_get_congestion(output);
+		total_bytes = obs.obs_output_get_total_bytes(output);
+		--local connect_time = obs.obs_output_get_connect_time_ms(output)
+		obs.obs_output_release(output);
 	end
 	
-	output_congestion_cumulative = output_congestion_cumulative + output_congestion
-	
-	--h264	???
-	--obs_x264
-	--jim_nvenc
-	--streamfx-h264_nvenc
-	--[[
-	local encoder = obs.obs_get_encoder_by_name("h264")
-	print("encoder is null: " .. tostring(encoder == nil))
-	if(encoder ~= nil) then
-		print("test")
-		obs_output_release(encoder)
+	congestion_cumulative = congestion_cumulative + congestion
+
+	-- Get bitrate
+	local bytes_sent = total_bytes;
+	local current_time = obs.os_gettime_ns();
+
+	if bytes_sent < last_bytes_sent then
+		bytes_sent = 0;
 	end
-	print("test2")
-	--]]
-	
-	--[[
-	local formattedString = "Encoder framerate: " .. tostring(encoder_framerate) .. "\n" .. 
-	"Frames missed due to rendering lag: ?/" .. tostring(render_frames) .. "\n" .. 
-	"Lagged frames: " .. tostring(render_lagged) .. "/" .. tostring(render_frames) .. "\n" .. 
-	"Skipped frames due to encoding lag: " .. tostring(encoder_skipped) .. "/" .. tostring(encoder_frames) .. "\n" .. 
-	"Dropped frames: " .. tostring(output_dropped) .. "/" .. tostring(output_frames) .. "\n" .. 
-	"Congestion: " .. tostring(output_congestion)
-	--]]
-	
-	render_lagged_string = tostring(render_lagged) .. "/" .. tostring(render_frames)
+	if bytes_sent == 0 then
+		last_bytes_sent = 0;
+	end
+		
+	local time_passed = (current_time - last_bytes_sent_time) / 1000000000.0;
+	local bits_between = (bytes_sent - last_bytes_sent) * 8;
+	bitrate = bits_between / time_passed / 1000.0;
 
-	encoder_skipped_string = tostring(encoder_skipped) .. "/" .. tostring(encoder_frames)
-	--encoder_framerate_string = tostring(encoder_framerate)
 
-	output_dropped_string = tostring(output_dropped) .. "/" .. tostring(output_frames)
-	output_congestion_string = string.format("%.2g", 100 * output_congestion)
-	output_congestion_avg_string = string.format("%.2g", 100 * output_congestion_cumulative / total_ticks)
+	local bitrate = last_bitrate;
+	if time_passed > 2.0 then
+		local bits_between = (bytes_sent - last_bytes_sent) * 8;
+		bitrate = bits_between / time_passed / 1000.0;
+
+		last_bytes_sent = bytes_sent;
+		last_bytes_sent_time = current_time;
+		last_bitrate = bitrate;
+	end
+
+	-- Update strings with new values
+	lagged_frames_string = tostring(lagged_frames) .. "/" .. tostring(rendered_frames);
+	lagged_percents_string = string.format("%.1f", 100.0 * lagged_frames / rendered_frames);
+
+	skipped_frames_string = tostring(skipped_frames) .. "/" .. tostring(encoded_frames);
+	skipped_percents_string = string.format("%.1f", 100.0 * skipped_frames / encoded_frames);
+
+	dropped_frames_string = tostring(dropped_frames) .. "/" .. tostring(total_frames);
+	dropped_percents_string = string.format("%.1f", 100.0 * dropped_frames / total_frames);
+
+	congestion_string = string.format("%.2g", 100 * congestion);
+	average_congestion_string = string.format("%.g", 100 * congestion_cumulative / total_ticks);
+	bitrate_string = string.format("%.0f", bitrate);
+
+	fps_string = string.format("%.2g", fps);
+	memory_usage_string = string.format("%.1f", memory_usage);
+	average_frame_time_string = string.format("%.1f", average_frame_time);
 	
-	lagged_percents_string = string.format("%.1f", 100.0 * render_lagged / render_frames)
-	skipped_percents_string = string.format("%.1f", 100.0 * encoder_skipped / encoder_frames)
-	dropped_percents_string = string.format("%.1f", 100.0 * output_dropped / output_frames)
-	
-	local formattedString = ""
+	-- Make a string for display in a text source
+	local formatted_string = ""
 	if show_lagged_frames then
-		formattedString = formattedString .. "Lagged frames: " .. render_lagged_string .. " (" .. lagged_percents_string .. "%)"
+		formatted_string = formatted_string .. "Missed frames: " .. lagged_frames_string .. " (" .. lagged_percents_string .. "%)";
 	end
 	if show_skipped_frames then
 		if show_lagged_frames then
-			formattedString = formattedString .. "\n"
+			formatted_string = formatted_string .. "\n";
 		end
-		formattedString = formattedString .. "Skipped frames: " .. encoder_skipped_string .. " (" .. skipped_percents_string .. "%)"
+		formatted_string = formatted_string .. "Skipped frames: " .. skipped_frames_string .. " (" .. skipped_percents_string .. "%)";
 	end
 	if show_dropped_frames then
 		if show_lagged_frames or show_skipped_frames then
-			formattedString = formattedString .. "\n"
+			formatted_string = formatted_string .. "\n";
 		end
-		formattedString = formattedString .. "Dropped frames: " .. output_dropped_string .. " (" .. dropped_percents_string .. "%)"
+		formatted_string = formatted_string .. "Dropped frames: " .. dropped_frames_string .. " (" .. dropped_percents_string .. "%)";
 	end
-	if show_dropped_frames then
+	if show_congestion then
 		if show_lagged_frames or show_skipped_frames or show_dropped_frames then
-			formattedString = formattedString .. "\n"
+			formatted_string = formatted_string .. "\n";
 		end
-		formattedString = formattedString .. "Congestion: " .. output_congestion_string .. "% (avg. " .. output_congestion_avg_string .. "%)"
+		formatted_string = formatted_string .. "Congestion: " .. congestion_string .. "% (avg. " .. average_congestion_string .. "%)";
+	end
+	if show_average_frame_time then
+		if show_lagged_frames or show_skipped_frames or show_dropped_frames or show_congestion then
+			formatted_string = formatted_string .. "\n";
+		end
+		formatted_string = formatted_string .. "Average frame time: " .. average_frame_time_string .. " ms";
+	end
+	if show_memory_usage then
+		if show_lagged_frames or show_skipped_frames or show_dropped_frames or show_congestion or show_average_frame_time then
+			formatted_string = formatted_string .. "\n";
+		end
+		formatted_string = formatted_string .. "Memory usage: " .. memory_usage_string .. " MB";
+	end
+	if show_bitrate then
+		if show_lagged_frames or show_skipped_frames or show_dropped_frames or show_congestion or show_memory_usage or show_average_frame_time then
+			formatted_string = formatted_string .. "\n";
+		end
+		formatted_string = formatted_string .. "Bitrate: " .. bitrate_string .." kb/s";
+	end
+	if show_fps then
+		if show_lagged_frames or show_skipped_frames or show_dropped_frames or show_congestion or show_memory_usage or show_average_frame_time or show_bitrate then
+			formatted_string = formatted_string .. "\n";
+		end
+		formatted_string = formatted_string .. "FPS: " .. fps_string;
 	end
 
+	-- Update text source
 	if source ~= nil then
-		local settings = obs.obs_data_create()
-		obs.obs_data_set_string(settings, "text", formattedString)
-		obs.obs_source_update(source, settings)
-		obs.obs_source_release(source)
-		obs.obs_data_release(settings)
+		local settings = obs.obs_data_create();
+		obs.obs_data_set_string(settings, "text", formatted_string);
+		obs.obs_source_update(source, settings);
+		obs.obs_source_release(source);
+		obs.obs_data_release(settings);
 	end
 end
 
 function on_event(event)
 	if event == obs.OBS_FRONTEND_EVENT_FINISHED_LOADING then
-		print("scene loaded")
+		print("scene loaded");
 		
 		if is_script_enabled then
-			print("script is enabled")
-			is_timer_on = true
-			obs.timer_add(timer_tick, callback_delay)
+			print("script is enabled");
+			is_timer_on = true;
+			obs.timer_add(timer_tick, callback_delay);
 		end
 	end
 end
 		
 function script_properties()
-	local props = obs.obs_properties_create()
+	local properties = obs.obs_properties_create();
 
-	local enable_script_prop = obs.obs_properties_add_bool(props, "is_script_enabled", "Enable Script")
+	local enable_script_property = obs.obs_properties_add_bool(properties, "is_script_enabled", "Enable Script");
 
-	local output_mode_prop = obs.obs_properties_add_list(props, "output_mode", "Output Mode", obs.OBS_COMBO_TYPE_LIST, obs.OBS_COMBO_FORMAT_STRING)
-	obs.obs_property_list_add_string(output_mode_prop, "Simple", "simple_stream")
-	obs.obs_property_list_add_string(output_mode_prop, "Advanced", "adv_stream")
-	obs.obs_property_set_long_description(output_mode_prop, "Must match the OBS streaming mode you are using.")
+	local output_mode_property = obs.obs_properties_add_list(properties, "output_mode", "Output Mode", obs.OBS_COMBO_TYPE_LIST, obs.OBS_COMBO_FORMAT_STRING);
+	obs.obs_property_list_add_string(output_mode_property, "Simple", "simple_stream");
+	obs.obs_property_list_add_string(output_mode_property, "Advanced", "adv_stream");
+	obs.obs_property_set_long_description(output_mode_property, "Must match the output mode you are using in OBS -> Settings -> Output -> Output mode.");
 	
-	local callback_delay_prop = obs.obs_properties_add_int(props, "callback_delay", "Update Delay (ms)", 100, 1000, 100)
-	obs.obs_property_set_long_description(callback_delay_prop, "Determines how often the data will update.")
+	local callback_delay_property = obs.obs_properties_add_int(properties, "callback_delay", "Update Delay (ms)", 100, 2000, 100);
+	obs.obs_property_set_long_description(callback_delay_property, "Determines how often the data will update.");
 	
-	local text_source_prop = obs.obs_properties_add_list(props,
-		"text_source", "Text Source", obs.OBS_COMBO_TYPE_EDITABLE, obs.OBS_COMBO_FORMAT_STRING)
-	local sources = obs.obs_enum_sources()
+	local text_source_property = obs.obs_properties_add_list(properties,
+		"text_source", "Text Source", obs.OBS_COMBO_TYPE_EDITABLE, obs.OBS_COMBO_FORMAT_STRING);
+	local sources = obs.obs_enum_sources();
 	if sources ~= nil then
 		for _, source in ipairs(sources) do
-			local source_id = obs.obs_source_get_id(source)
+			local source_id = obs.obs_source_get_id(source);
 			if source_id == "text_gdiplus_v2" or source_id == "text_ft2_source_v2" then
-				local name = obs.obs_source_get_name(source)
-				obs.obs_property_list_add_string(text_source_prop, name, name)
+				local name = obs.obs_source_get_name(source);
+				obs.obs_property_list_add_string(text_source_property, name, name);
 			end
 		end
 	end
-	obs.source_list_release(sources)
-	obs.obs_property_set_long_description(text_source_prop,
-		"Text source that will be used to display the data.")
+	obs.source_list_release(sources);
+	obs.obs_property_set_long_description(text_source_property,
+		"Text source that will be used to display the data.");
 	
-	local show_lagged_frames_prop = obs.obs_properties_add_bool(props, "show_lagged_frames", "Show Lagged Frames")
+	local show_lagged_frames_property = obs.obs_properties_add_bool(properties, "show_lagged_frames", "Show Missed Frames");
+	obs.obs_property_set_long_description(show_lagged_frames_property, "Frames missed due to rendering lag");
+
+	local show_skipped_frames_property = obs.obs_properties_add_bool(properties, "show_skipped_frames", "Show Skipped Frames");
+	obs.obs_property_set_long_description(show_skipped_frames_property, "Skipped Frames due to Rendering Lag");
 	
-	local show_skipped_frames_prop = obs.obs_properties_add_bool(props, "show_skipped_frames", "Show Skipped Frames")
-	obs.obs_property_set_long_description(callback_delay_prop, "Show Skipped Frames due to Rendering Lag.")
+	local show_dropped_frames_property = obs.obs_properties_add_bool(properties, "show_dropped_frames", "Show Dropped Frames");
+	obs.obs_property_set_long_description(show_dropped_frames_property, "Dropped frames");
+
+	local show_congestion_property = obs.obs_properties_add_bool(properties, "show_congestion", "Show Congestion")
+	obs.obs_property_set_long_description(show_congestion_property, "The congestion value is used to visualize the current congestion of a network output");
+
+	local show_average_frame_time_property = obs.obs_properties_add_bool(properties, "show_average_frame_time", "Show Average Frame Time")
+	obs.obs_property_set_long_description(show_average_frame_time_property, "Average time to render frame");
+
+	local show_memory_usage_property = obs.obs_properties_add_bool(properties, "show_memory_usage", "Show Memory Usage")
+	obs.obs_property_set_long_description(show_memory_usage_property, "Memory Usage");
 	
-	local show_dropped_frames_prop = obs.obs_properties_add_bool(props, "show_dropped_frames", "Show Dropped Frames")
-	
-	local show_congestion_prop = obs.obs_properties_add_bool(props, "show_congestion", "Show Congestion")
-	obs.obs_property_set_long_description(show_congestion_prop, "The congestion value. This value is used to visualize the current congestion of a network output. For example, if there is no congestion, the value will be 0%, if it’s fully congested, the value will be 100%.")
-	
-	return props
+	local show_bitrate_property = obs.obs_properties_add_bool(properties, "show_bitrate", "Show Bitrate")
+	obs.obs_property_set_long_description(show_bitrate_property, "Bitrate");
+
+	local show_fps_property = obs.obs_properties_add_bool(properties, "show_fps", "Show FPS")
+	obs.obs_property_set_long_description(show_fps_property, "FPS/frames per seconds/framerate");
+
+	return properties;
 end
 
 function script_defaults(settings)
-	obs.obs_data_set_default_bool(settings, "is_script_enabled", true)
-	obs.obs_data_set_default_string(settings, "output_mode", "simple_stream")
-	obs.obs_data_set_default_int(settings, "callback_delay", 1000)
-	obs.obs_data_set_default_string(settings, "text_source", "")
-	obs.obs_data_set_default_bool(settings, "show_lagged_frames", true)
-	obs.obs_data_set_default_bool(settings, "show_skipped_frames", true)
-	obs.obs_data_set_default_bool(settings, "show_dropped_frames", true)
-	obs.obs_data_set_default_bool(settings, "show_congestion", false)
+	obs.obs_data_set_default_bool(settings, "is_script_enabled", true);
+	obs.obs_data_set_default_string(settings, "output_mode", "simple_stream");
+	obs.obs_data_set_default_int(settings, "callback_delay", 1000);
+	obs.obs_data_set_default_string(settings, "text_source", "");
+
+	obs.obs_data_set_default_bool(settings, "show_lagged_frames", true);
+	obs.obs_data_set_default_bool(settings, "show_skipped_frames", true);
+	obs.obs_data_set_default_bool(settings, "show_dropped_frames", true);
+	obs.obs_data_set_default_bool(settings, "show_congestion", true);
+
+	obs.obs_data_set_default_bool(settings, "show_average_frame_time", true);
+	obs.obs_data_set_default_bool(settings, "show_memory_usage", true);
+	obs.obs_data_set_default_bool(settings, "show_bitrate", true);
+	obs.obs_data_set_default_bool(settings, "show_fps", true);
 end
 
 function script_update(settings)
-	is_script_enabled = obs.obs_data_get_bool(settings, "is_script_enabled")
-	output_mode = obs.obs_data_get_string(settings, "output_mode")
-	callback_delay = obs.obs_data_get_int(settings, "callback_delay")
-	text_source = obs.obs_data_get_string(settings, "text_source")
-	show_lagged_frames = obs.obs_data_get_bool(settings, "show_lagged_frames")
-	show_skipped_frames = obs.obs_data_get_bool(settings, "show_skipped_frames")
-	show_dropped_frames = obs.obs_data_get_bool(settings, "show_dropped_frames")
-	show_dropped_frames = obs.obs_data_get_bool(settings, "show_congestion")
-	
+	is_script_enabled = obs.obs_data_get_bool(settings, "is_script_enabled");
+	output_mode = obs.obs_data_get_string(settings, "output_mode");
+	callback_delay = obs.obs_data_get_int(settings, "callback_delay");
+	text_source = obs.obs_data_get_string(settings, "text_source");
+
+	show_lagged_frames = obs.obs_data_get_bool(settings, "show_lagged_frames");
+	show_skipped_frames = obs.obs_data_get_bool(settings, "show_skipped_frames");
+	show_dropped_frames = obs.obs_data_get_bool(settings, "show_dropped_frames");
+	show_congestion = obs.obs_data_get_bool(settings, "show_congestion");
+	show_average_frame_time = obs.obs_data_get_bool(settings, "show_average_frame_time");
+	show_memory_usage = obs.obs_data_get_bool(settings, "show_memory_usage");
+	show_bitrate = obs.obs_data_get_bool(settings, "show_bitrate");
+	show_fps = obs.obs_data_get_bool(settings, "show_fps");
+
+	if is_timer_on then
+		obs.timer_remove(timer_tick);
+		is_timer_on = false;
+	end
+
 	local source = obs.obs_get_source_by_name(text_source)
+
 	if source == nil then
-		print("No source found")
-		is_timer_on = false
-		obs.timer_remove(timer_tick)
-		return
+		print("No source found");
+		is_timer_on = false;
+		return;
 	end
 	
-	obs.obs_source_release(source)
+	obs.obs_source_release(source);
 	
 	if not is_script_enabled then
-		print("Script is disabled")
-		is_timer_on = false
-		obs.timer_remove(timer_tick)
-		return
+		print("Script is disabled");
+		is_timer_on = false;
+		return;
 	end
 	
-	print("Script is reloaded")
-	if is_timer_on then
-		obs.timer_remove(timer_tick)
-	end
-	obs.timer_add(timer_tick, callback_delay)
+	print("Script is reloaded");
+	is_timer_on = true;
+	obs.timer_add(timer_tick, callback_delay);
 end
 
 function script_description()
-	return "Shows lagged frames, skipped frames, dropped frames and congestion on stream as text source."
+	return "Shows missed frames, skipped frames, dropped frames, congestion, bitrate, fps, memory usage and average frame time on stream as text source.";
 end
 
 function script_load(settings)
-	print("script loaded")
-	obs.obs_frontend_add_event_callback(on_event)
+	print("script loaded");
+	obs.obs_frontend_add_event_callback(on_event);
 end
