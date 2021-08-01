@@ -1,8 +1,8 @@
 # OBS Stats on Stream
 The script allow to display certain technical data on stream.
 
-<img src="https://i.imgur.com/uYnrxJ8.png" />
-<img src="https://i.imgur.com/icwCsyg.png" />
+<img src="https://i.imgur.com/VracWR6.png" />
+<img src="https://i.imgur.com/GSQa9tH.png" />
 
 # How to use
 1. Download the script.
@@ -12,7 +12,7 @@ The script allow to display certain technical data on stream.
     * Output Mode must match the OBS encoder mode. Check it by going OBS -> Settings -> Output -> Output Mode (on the very top).
     * Update Delay determines how often the data will be updated. 1000 ms means once a second. 100 ms means 10 times a second.
     * Choose the name of your created text source.
-    * Check and/or uncheck what you want to display.
+    * Modify Text Formatting if needed. all $name are variables and are replaced with actual values.
 5. You are ready to go!
 
 # TODO
