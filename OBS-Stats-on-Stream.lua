@@ -17,22 +17,28 @@ local output_mode = "simple_stream";
 local callback_delay = 1000;
 local text_source = "";
 
-local show_lagged_frames = true;
-local show_skipped_frames = true;
-local show_dropped_frames = true;
-local show_congestion = true;
-local show_bitrate = true;
-local show_memory_usage = true;
-local show_fps = true;
-local show_average_frame_time = true;
+local text_formatting = "";
+
+local default_text_formatting = [[Missed frames: $missed_frames/$missed_total_frames ($missed_percents%)
+Skipped frames: $skipped_frames/$skipped_total_frames ($skipped_percents%)
+Dropped frames: $dropped_frames/$dropped_total_frames ($dropped_percents%)
+Congestion: $congestion% (avg. $average_congestion%)
+Average frame time: $average_frame_time ms
+Memory Usage: $memory_usage MB
+Bitrate: $bitrate kb/s
+FPS: $fps]];
+
 
 local lagged_frames_string = "";
+local lagged_total_frames_string = "";
 local lagged_percents_string = "";
 
 local skipped_frames_string = "";
+local skipped_total_frames_string = "";
 local skipped_percents_string = "";
 
 local dropped_frames_string = "";
+local dropped_total_frames_string = "";
 local dropped_percents_string = "";
 
 local congestion_string = "";
@@ -46,7 +52,6 @@ local average_frame_time_string = "";
 local last_bitrate = 0;
 local last_bytes_sent = 0;
 local last_bytes_sent_time = 0;
-
 
 local is_script_enabled = true;
 local is_timer_on = false;
@@ -62,6 +67,8 @@ else
 	obsffi = ffi.load("obs"); -- Windows
 	-- Linux?
 end
+
+local my_settings = nil;
 
 function timer_tick()
 	total_ticks = total_ticks + 1;
@@ -167,79 +174,68 @@ function timer_tick()
 	end
 
 	-- Update strings with new values
-	lagged_frames_string = tostring(lagged_frames) .. "/" .. tostring(rendered_frames);
+	lagged_frames_string = tostring(lagged_frames);
+	lagged_total_frames_string = tostring(rendered_frames);
 	lagged_percents_string = string.format("%.1f", 100.0 * lagged_frames / rendered_frames);
 
-	skipped_frames_string = tostring(skipped_frames) .. "/" .. tostring(encoded_frames);
+	skipped_frames_string = tostring(skipped_frames);
+	skipped_total_frames_string = tostring(encoded_frames);
 	skipped_percents_string = string.format("%.1f", 100.0 * skipped_frames / encoded_frames);
 
-	dropped_frames_string = tostring(dropped_frames) .. "/" .. tostring(total_frames);
+	dropped_frames_string = tostring(dropped_frames);
+	dropped_total_frames_string = tostring(total_frames);
 	dropped_percents_string = string.format("%.1f", 100.0 * dropped_frames / total_frames);
 
 	congestion_string = string.format("%.2g", 100 * congestion);
 	average_congestion_string = string.format("%.g", 100 * congestion_cumulative / total_ticks);
-	bitrate_string = string.format("%.0f", bitrate);
-
-	fps_string = string.format("%.2g", fps);
-	memory_usage_string = string.format("%.1f", memory_usage);
+	
 	average_frame_time_string = string.format("%.1f", average_frame_time);
+	memory_usage_string = string.format("%.1f", memory_usage);
+	bitrate_string = string.format("%.0f", bitrate);
+	fps_string = string.format("%.2g", fps);
+	
 	
 	-- Make a string for display in a text source
-	local formatted_string = ""
-	if show_lagged_frames then
-		formatted_string = formatted_string .. "Missed frames: " .. lagged_frames_string .. " (" .. lagged_percents_string .. "%)";
-	end
-	if show_skipped_frames then
-		if show_lagged_frames then
-			formatted_string = formatted_string .. "\n";
-		end
-		formatted_string = formatted_string .. "Skipped frames: " .. skipped_frames_string .. " (" .. skipped_percents_string .. "%)";
-	end
-	if show_dropped_frames then
-		if show_lagged_frames or show_skipped_frames then
-			formatted_string = formatted_string .. "\n";
-		end
-		formatted_string = formatted_string .. "Dropped frames: " .. dropped_frames_string .. " (" .. dropped_percents_string .. "%)";
-	end
-	if show_congestion then
-		if show_lagged_frames or show_skipped_frames or show_dropped_frames then
-			formatted_string = formatted_string .. "\n";
-		end
-		formatted_string = formatted_string .. "Congestion: " .. congestion_string .. "% (avg. " .. average_congestion_string .. "%)";
-	end
-	if show_average_frame_time then
-		if show_lagged_frames or show_skipped_frames or show_dropped_frames or show_congestion then
-			formatted_string = formatted_string .. "\n";
-		end
-		formatted_string = formatted_string .. "Average frame time: " .. average_frame_time_string .. " ms";
-	end
-	if show_memory_usage then
-		if show_lagged_frames or show_skipped_frames or show_dropped_frames or show_congestion or show_average_frame_time then
-			formatted_string = formatted_string .. "\n";
-		end
-		formatted_string = formatted_string .. "Memory usage: " .. memory_usage_string .. " MB";
-	end
-	if show_bitrate then
-		if show_lagged_frames or show_skipped_frames or show_dropped_frames or show_congestion or show_memory_usage or show_average_frame_time then
-			formatted_string = formatted_string .. "\n";
-		end
-		formatted_string = formatted_string .. "Bitrate: " .. bitrate_string .." kb/s";
-	end
-	if show_fps then
-		if show_lagged_frames or show_skipped_frames or show_dropped_frames or show_congestion or show_memory_usage or show_average_frame_time or show_bitrate then
-			formatted_string = formatted_string .. "\n";
-		end
-		formatted_string = formatted_string .. "FPS: " .. fps_string;
-	end
+	local formatted_text = text_formatting;
+
+	formatted_text = formatted_text:gsub("$missed_frames", lagged_frames_string);
+	formatted_text = formatted_text:gsub("$missed_total_frames", lagged_total_frames_string);
+	formatted_text = formatted_text:gsub("$missed_percents", lagged_percents_string);
+
+	formatted_text = formatted_text:gsub("$skipped_frames", skipped_frames_string);
+	formatted_text = formatted_text:gsub("$skipped_total_frames", skipped_total_frames_string);
+	formatted_text = formatted_text:gsub("$skipped_percents", skipped_percents_string);
+
+	formatted_text = formatted_text:gsub("$dropped_frames", dropped_frames_string);
+	formatted_text = formatted_text:gsub("$dropped_total_frames", dropped_total_frames_string);
+	formatted_text = formatted_text:gsub("$dropped_percents", dropped_percents_string);
+
+	formatted_text = formatted_text:gsub("$congestion", congestion_string);
+	formatted_text = formatted_text:gsub("$average_congestion",average_congestion_string);
+
+	formatted_text = formatted_text:gsub("$average_frame_time", average_frame_time_string);
+	formatted_text = formatted_text:gsub("$memory_usage", memory_usage_string);
+	formatted_text = formatted_text:gsub("$bitrate", bitrate_string);
+	formatted_text = formatted_text:gsub("$fps", fps_string);
 
 	-- Update text source
 	if source ~= nil then
 		local settings = obs.obs_data_create();
-		obs.obs_data_set_string(settings, "text", formatted_string);
+		obs.obs_data_set_string(settings, "text", formatted_text);
 		obs.obs_source_update(source, settings);
 		obs.obs_source_release(source);
 		obs.obs_data_release(settings);
 	end
+end
+
+function reset_formatting(properties, property)
+	text_formatting = default_text_formatting;
+
+	obs.obs_data_set_string(my_settings, "text_formatting", default_text_formatting);
+	obs.obs_properties_apply_settings(properties, my_settings);
+
+	print("test");
+	return true;
 end
 
 function on_event(event)
@@ -280,32 +276,12 @@ function script_properties()
 		end
 	end
 	obs.source_list_release(sources);
-	obs.obs_property_set_long_description(text_source_property,
-		"Text source that will be used to display the data.");
-	
-	local show_lagged_frames_property = obs.obs_properties_add_bool(properties, "show_lagged_frames", "Show Missed Frames");
-	obs.obs_property_set_long_description(show_lagged_frames_property, "Frames missed due to rendering lag");
+	obs.obs_property_set_long_description(text_source_property, "Text source that will be used to display the data.");
 
-	local show_skipped_frames_property = obs.obs_properties_add_bool(properties, "show_skipped_frames", "Show Skipped Frames");
-	obs.obs_property_set_long_description(show_skipped_frames_property, "Skipped Frames due to Rendering Lag");
-	
-	local show_dropped_frames_property = obs.obs_properties_add_bool(properties, "show_dropped_frames", "Show Dropped Frames");
-	obs.obs_property_set_long_description(show_dropped_frames_property, "Dropped frames");
+	obs.obs_properties_add_text(properties, "text_formatting", "Text Formatting", obs.OBS_TEXT_MULTILINE);
+	obs.obs_properties_add_button(properties, "reset_formatting_button", "Reset Formatting", reset_formatting);
 
-	local show_congestion_property = obs.obs_properties_add_bool(properties, "show_congestion", "Show Congestion")
-	obs.obs_property_set_long_description(show_congestion_property, "The congestion value is used to visualize the current congestion of a network output");
-
-	local show_average_frame_time_property = obs.obs_properties_add_bool(properties, "show_average_frame_time", "Show Average Frame Time")
-	obs.obs_property_set_long_description(show_average_frame_time_property, "Average time to render frame");
-
-	local show_memory_usage_property = obs.obs_properties_add_bool(properties, "show_memory_usage", "Show Memory Usage")
-	obs.obs_property_set_long_description(show_memory_usage_property, "Memory Usage");
-	
-	local show_bitrate_property = obs.obs_properties_add_bool(properties, "show_bitrate", "Show Bitrate")
-	obs.obs_property_set_long_description(show_bitrate_property, "Bitrate");
-
-	local show_fps_property = obs.obs_properties_add_bool(properties, "show_fps", "Show FPS")
-	obs.obs_property_set_long_description(show_fps_property, "FPS/frames per seconds/framerate");
+	obs.obs_properties_apply_settings(properties, my_settings);
 
 	return properties;
 end
@@ -315,32 +291,18 @@ function script_defaults(settings)
 	obs.obs_data_set_default_string(settings, "output_mode", "simple_stream");
 	obs.obs_data_set_default_int(settings, "callback_delay", 1000);
 	obs.obs_data_set_default_string(settings, "text_source", "");
-
-	obs.obs_data_set_default_bool(settings, "show_lagged_frames", true);
-	obs.obs_data_set_default_bool(settings, "show_skipped_frames", true);
-	obs.obs_data_set_default_bool(settings, "show_dropped_frames", true);
-	obs.obs_data_set_default_bool(settings, "show_congestion", true);
-
-	obs.obs_data_set_default_bool(settings, "show_average_frame_time", true);
-	obs.obs_data_set_default_bool(settings, "show_memory_usage", true);
-	obs.obs_data_set_default_bool(settings, "show_bitrate", true);
-	obs.obs_data_set_default_bool(settings, "show_fps", true);
+	obs.obs_data_set_default_string(settings, "text_formatting", default_text_formatting);
 end
 
 function script_update(settings)
+	my_settings = settings;
+
 	is_script_enabled = obs.obs_data_get_bool(settings, "is_script_enabled");
 	output_mode = obs.obs_data_get_string(settings, "output_mode");
 	callback_delay = obs.obs_data_get_int(settings, "callback_delay");
 	text_source = obs.obs_data_get_string(settings, "text_source");
 
-	show_lagged_frames = obs.obs_data_get_bool(settings, "show_lagged_frames");
-	show_skipped_frames = obs.obs_data_get_bool(settings, "show_skipped_frames");
-	show_dropped_frames = obs.obs_data_get_bool(settings, "show_dropped_frames");
-	show_congestion = obs.obs_data_get_bool(settings, "show_congestion");
-	show_average_frame_time = obs.obs_data_get_bool(settings, "show_average_frame_time");
-	show_memory_usage = obs.obs_data_get_bool(settings, "show_memory_usage");
-	show_bitrate = obs.obs_data_get_bool(settings, "show_bitrate");
-	show_fps = obs.obs_data_get_bool(settings, "show_fps");
+	text_formatting = obs.obs_data_get_string(settings, "text_formatting");
 
 	if is_timer_on then
 		obs.timer_remove(timer_tick);
@@ -369,7 +331,12 @@ function script_update(settings)
 end
 
 function script_description()
-	return "Shows missed frames, skipped frames, dropped frames, congestion, bitrate, fps, memory usage and average frame time on stream as text source.";
+	return [[
+<center><h2>OBS Stats on Stream v0.5</h2></center>
+<center><a href="https://twitch.tv/GreenComfyTea">twitch.tv/GreenComfyTea</a> - 2021</center>
+<center><p>Shows missed frames, skipped frames, dropped frames, congestion, bitrate, fps, memory usage and average frame time on stream as text source.</p></center>
+<hr/>
+]];
 end
 
 function script_load(settings)
