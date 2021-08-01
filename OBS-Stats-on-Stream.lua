@@ -234,7 +234,6 @@ function reset_formatting(properties, property)
 	obs.obs_data_set_string(my_settings, "text_formatting", default_text_formatting);
 	obs.obs_properties_apply_settings(properties, my_settings);
 
-	print("test");
 	return true;
 end
 
@@ -335,6 +334,7 @@ function script_description()
 <center><h2>OBS Stats on Stream v0.5</h2></center>
 <center><a href="https://twitch.tv/GreenComfyTea">twitch.tv/GreenComfyTea</a> - 2021</center>
 <center><p>Shows missed frames, skipped frames, dropped frames, congestion, bitrate, fps, memory usage and average frame time on stream as text source.</p></center>
+<center><a href="https://github.com/GreenComfyTea/OBS-Stats-on-Stream/blob/main/Text-Formatting-Variables.md">Text Formatting Variables</a></center>
 <hr/>
 ]];
 end
