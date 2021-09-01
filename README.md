@@ -1,10 +1,17 @@
 # OBS Stats on Stream
-The script allow to display certain technical data on stream.
+The script allow to shows missed frames, skipped frames, dropped frames, congestion, bitrate, fps, memory usage and average frame time on stream as text source and/or in chat.
+
+<table style="width:100%">
+<tr><th colspan="2"></th></tr>
+<tr>
+	<td align="center"><a href="./OBS-Stats-on-Stream/Text-Formatting-Variables.md">Text Formatting Variables</a></td>
+	<td align="center"><a href="./OBS-Stats-on-Stream/Bot-Commands.md">Bot Commands</a></td>	
+</tr>
+  <tr><th colspan="2"></th></tr>
+</table>
 
 <img src="https://i.imgur.com/qglRNBr.png" />
 <img src="https://i.imgur.com/QA2VMT1.png" />
-
-
 
 # How to use
 1. Download the script files. You only need `OBS-Stats-on-Stream.lua` and `ljsocket.lua`. These two files must be placed in the same folder.
