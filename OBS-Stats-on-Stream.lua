@@ -97,10 +97,7 @@ local auth_success = false;
 local auth_requested = false;
 
 function bot_socket_tick()
-	print("Bot Tick");
-
 	if bot_socket:is_connected() then
-		
 		if not auth_success and not auth_requested then
 			auth();
 		end
@@ -233,7 +230,6 @@ end
 function receive()
 	local response, err = bot_socket:receive();
 	if response then
-		print(response);
 		return response;
 	elseif err ~= "timeout" then
 		error(err);
@@ -597,9 +593,10 @@ function script_description()
 <center><h2>OBS Stats on Stream v0.6</h2></center>
 <center><a href="https://twitch.tv/GreenComfyTea">twitch.tv/GreenComfyTea</a> - 2021</center>
 <center><p>Shows missed frames, skipped frames, dropped frames, congestion, bitrate, fps, memory usage and average frame time on stream as text source and/or in chat.</p></center>
-<center><a href="https://github.com/GreenComfyTea/OBS-Stats-on-Stream/blob/main/Text-Formatting-Variables.md">Text Formatting Variables</a></center>
-<center><a href="https://github.com/GreenComfyTea/OBS-Stats-on-Stream/blob/main/Bot-Commands.md">Bot commands.</a></center>
 <center><a href="https://twitchapps.com/tmi/">Twitch Chat OAuth Password Generator</a></center>
+<center><a href="https://github.com/GreenComfyTea/OBS-Stats-on-Stream/blob/main/Text-Formatting-Variables.md">Text Formatting Variables</a></center>
+<center><a href="https://github.com/GreenComfyTea/OBS-Stats-on-Stream/blob/main/Bot-Commands.md">Bot commands</a></center>
+<br>
 <hr/>
 ]];
 end
