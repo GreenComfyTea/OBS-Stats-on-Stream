@@ -4,8 +4,8 @@ The script allow to shows missed frames, skipped frames, dropped frames, congest
 <table style="width:100%">
 <tr><th colspan="2"></th></tr>
 <tr>
-	<td align="center"><a href="./OBS-Stats-on-Stream/Text-Formatting-Variables.md">Text Formatting Variables</a></td>
-	<td align="center"><a href="./OBS-Stats-on-Stream/Bot-Commands.md">Bot Commands</a></td>	
+	<td align="center"><a href="./Text-Formatting-Variables.md">Text Formatting Variables</a></td>
+	<td align="center"><a href="./Bot-Commands.md">Bot Commands</a></td>	
 </tr>
   <tr><th colspan="2"></th></tr>
 </table>
