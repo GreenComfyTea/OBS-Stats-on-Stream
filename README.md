@@ -7,9 +7,9 @@ The script allow to display certain technical data on stream.
 
 
 # How to use
-1. Download the script files. You only need `OBS-Stats-on-Stream.lua` and `ljsocket.lua`.
+1. Download the script files. You only need `OBS-Stats-on-Stream.lua` and `ljsocket.lua`. These two files must be placed in the same folder.
 2. Add a text source to your scene. This source will be used to display the data.
-3. Open Tools -> Scripts. Add the script.
+3. Open Tools -> Scripts. Add the `OBS-Stats-on-Stream.lua` script (only this one).
 4. Configure the script.
 	* If you don't need Bot functionality, uncheck `Enable Bot` mark.
     * `Output Mode` must match the OBS encoder mode. Check it by going `OBS -> Settings -> Output -> Output Mode` (on the very top).
@@ -30,7 +30,7 @@ The script allow to display certain technical data on stream.
 
 # Contribution
 
-Big thanks to ["jammehcow"](https://github.com/jammehcow) for helping me out with figuring out Socket functionality in Lua!
+Big thanks to [jammehcow](https://github.com/jammehcow) for helping me with figuring out Socket functionality in Lua!
 
 OBS Docs are very confusing. If you want to contribute feel free to message me, make a pull request or open an issue!
 
