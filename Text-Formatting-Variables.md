@@ -10,6 +10,7 @@ $dropped_total_frames<br>
 $dropped_percents<br>
 $congestion<br>
 $average_congestion<br>
+$average_frame_time<br>
 $memory_usage<br>
 $bitrate<br>
 $fps</p>
