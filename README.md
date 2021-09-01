@@ -1,24 +1,36 @@
 # OBS Stats on Stream
 The script allow to display certain technical data on stream.
 
-<img src="https://i.imgur.com/VracWR6.png" />
-<img src="https://i.imgur.com/GSQa9tH.png" />
+<img src="https://i.imgur.com/qglRNBr.png" />
+<img src="https://i.imgur.com/QA2VMT1.png" />
+
+
 
 # How to use
-1. Download the script.
+1. Download the script files. You only need `OBS-Stats-on-Stream.lua` and `ljsocket.lua`.
 2. Add a text source to your scene. This source will be used to display the data.
 3. Open Tools -> Scripts. Add the script.
 4. Configure the script.
-    * Output Mode must match the OBS encoder mode. Check it by going OBS -> Settings -> Output -> Output Mode (on the very top).
-    * Update Delay determines how often the data will be updated. 1000 ms means once a second. 100 ms means 10 times a second.
-    * Choose the name of your created text source.
-    * Modify Text Formatting if needed. all $name are variables and are replaced with actual values.
+	* If you don't need Bot functionality, uncheck `Enable Bot` mark.
+    * `Output Mode` must match the OBS encoder mode. Check it by going `OBS -> Settings -> Output -> Output Mode` (on the very top).
+    * `Update Delay` determines how often the data will be updated. 1000 ms means once a second. 100 ms means 10 times a second.
+	* `Bot Delay` determines how often the bot will read chat and write to it.
+    * Link your created text source.
+	* Enter your twitch nickname in `Nickname` field.
+	* Enter `OAuth Password` for your twitch account. You can get it here: https://twitchapps.com/tmi/
+    * Modify `Text Formatting` if needed. all $name are variables and are replaced with actual values.
 5. You are ready to go!
 
+>**:pushpin: NOTE:**   If you don't need Text Source functionality, you don't need to add a text source and link it in the script.
+>**:pushpin: NOTE:**   If you don't need Bot functionality, you can use `Enable Bot` checkbox to disable it. You also don't need to type `Nickname` and `OAuth Password` in that case. 
+
 # TODO
-* Print the data in chat triggered by a command !obsstats. ---> is it even possible?
+* Automatic Output Mode?
+* CPU Usage?
 
 # Contribution
+
+Big thanks to ["jammehcow"](https://github.com/jammehcow) for helping me out with figuring out Socket functionality in Lua!
 
 OBS Docs are very confusing. If you want to contribute feel free to message me, make a pull request or open an issue!
 
