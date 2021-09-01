@@ -370,8 +370,8 @@ function timer_tick()
 	dropped_total_frames_string = tostring(total_frames);
 	dropped_percents_string = string.format("%.1f", 100.0 * dropped_frames / total_frames);
 
-	congestion_string = string.format("%.2g", 100 * congestion);
-	average_congestion_string = string.format("%.g", 100 * congestion_cumulative / total_ticks);
+	congestion_string = string.format("%.2f", 100 * congestion);
+	average_congestion_string = string.format("%.2f", 100 * congestion_cumulative / total_ticks);
 	
 	average_frame_time_string = string.format("%.1f", average_frame_time);
 	memory_usage_string = string.format("%.1f", memory_usage);
