@@ -17,7 +17,7 @@ The script allow to display certain technical data on stream.
 	* `Bot Delay` determines how often the bot will read chat and write to it.
     * Link your created text source.
 	* Enter your twitch nickname in `Nickname` field.
-	* Enter `OAuth Password` for your twitch account. You can get it here: https://twitchapps.com/tmi/
+	* Enter `OAuth Password` for your twitch account. You can get it here: [click](https://twitchapps.com/tmi).
     * Modify `Text Formatting` if needed. all $name are variables and are replaced with actual values.
 5. You are ready to go!
 
