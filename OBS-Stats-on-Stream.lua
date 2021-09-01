@@ -214,7 +214,7 @@ function auth()
 	assert(bot_socket:send(
 		"PASS " ..  password ..
 		"\n" ..
-		"NICK " .. nickname ..
+		"NICK " .. nickname:lower() ..
 		"\r\n"
 	));
 	auth_requested = true;
@@ -468,7 +468,7 @@ function script_properties()
 	local properties = obs.obs_properties_create();
 
 	local enable_script_property = obs.obs_properties_add_bool(properties, "is_script_enabled", "Enable Script");
-	local enable_script_property = obs.obs_properties_add_bool(properties, "is_bot_enabled", "Enable Bot");
+	local enable_bot_property = obs.obs_properties_add_bool(properties, "is_bot_enabled", "Enable Bot");
 	
 	local output_mode_property = obs.obs_properties_add_list(properties, "output_mode", "Output Mode", obs.OBS_COMBO_TYPE_LIST, obs.OBS_COMBO_FORMAT_STRING);
 	obs.obs_property_list_add_string(output_mode_property, "Simple", "simple_stream");
@@ -478,16 +478,14 @@ function script_properties()
 	local timer_delay_property = obs.obs_properties_add_int(properties, "timer_delay", "Update Delay (ms)", 100, 2000, 100);
 	obs.obs_property_set_long_description(timer_delay_property, "Determines how often the data will update.");
 	
-	local enable_script_property = obs.obs_properties_add_bool(properties, "is_script_enabled", "Enable Script");
+	local bot_delay_property = obs.obs_properties_add_int(properties, "bot_delay", "Bot Delay (ms)", 500, 5000, 100);
+	obs.obs_property_set_long_description(bot_delay_property, "Determines how often the bot will read chat and write to it.");
 	
-	local timer_delay_property = obs.obs_properties_add_int(properties, "bot_delay", "Bot Delay (ms)", 500, 5000, 100);
-	obs.obs_property_set_long_description(timer_delay_property, "Determines how often the bot will read chat and write to it.");
-	
-	local oauth_property = obs.obs_properties_add_text(properties, "nickname", "Nickname", obs.OBS_TEXT_DEFAULT);
-	obs.obs_property_set_long_description(output_mode_property, "Your nicknamename on twitch.");
+	local nickname_property = obs.obs_properties_add_text(properties, "nickname", "Nickname", obs.OBS_TEXT_DEFAULT);
+	obs.obs_property_set_long_description(nickname_property, "Your nickname on twitch.");
 	
 	local oauth_property = obs.obs_properties_add_text(properties, "password", "OAuth Password", obs.OBS_TEXT_PASSWORD);
-	obs.obs_property_set_long_description(output_mode_property, "Format: oauth:xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx. Visit https://twitchapps.com/tmi/ to get your AOuth Password.");
+	obs.obs_property_set_long_description(oauth_property, "Format: oauth:xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx. Visit https://twitchapps.com/tmi/ to get your AOuth Password.");
 	
 	obs.obs_properties_add_button(properties, "reconnect_bot_button", "Reconnect Bot...", reconnect_bot);
 	
