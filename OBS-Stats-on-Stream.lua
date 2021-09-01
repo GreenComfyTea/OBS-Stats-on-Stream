@@ -594,7 +594,7 @@ end
 
 function script_description()
 	return [[
-<center><h2>OBS Stats on Stream v0.5</h2></center>
+<center><h2>OBS Stats on Stream v0.6</h2></center>
 <center><a href="https://twitch.tv/GreenComfyTea">twitch.tv/GreenComfyTea</a> - 2021</center>
 <center><p>Shows missed frames, skipped frames, dropped frames, congestion, bitrate, fps, memory usage and average frame time on stream as text source and/or in chat.</p></center>
 <center><a href="https://github.com/GreenComfyTea/OBS-Stats-on-Stream/blob/main/Text-Formatting-Variables.md">Text Formatting Variables</a></center>
