@@ -1,22 +1,40 @@
 obs = obslua
 local ffi = require("ffi")
+local socket = require("ljsocket")
 
 ffi.cdef[[
 
 	struct video_output;
 	typedef struct video_output video_t;
 
+	//struct config_data;
+	//typedef struct config_data config_t;
+
+	struct os_cpu_usage_info;
+	typedef struct os_cpu_usage_info os_cpu_usage_info_t;
+
 	uint32_t video_output_get_skipped_frames(const video_t *video);
 	uint32_t video_output_get_total_frames(const video_t *video);
 	double video_output_get_frame_rate(const video_t *video);
+
+	//const char *config_get_string(config_t *config, const char *section, const char *name);
+
+	os_cpu_usage_info_t *os_cpu_usage_info_start(void);
+	double os_cpu_usage_info_query(os_cpu_usage_info_t *info);
+	void os_cpu_usage_info_destroy(os_cpu_usage_info_t *info);
 
 	video_t *obs_get_video(void);
 ]]
 
 local output_mode = "simple_stream";
-local callback_delay = 1000;
-local text_source = "";
 
+local timer_delay = 1000;
+local bot_delay = 1000;
+
+local password = "";
+local nickname = "justinfan4269";
+
+local text_source = "";
 local text_formatting = "";
 
 local default_text_formatting = [[Missed frames: $missed_frames/$missed_total_frames ($missed_percents%)
@@ -54,6 +72,7 @@ local last_bytes_sent = 0;
 local last_bytes_sent_time = 0;
 
 local is_script_enabled = true;
+local is_bot_enabled = true;
 local is_timer_on = false;
 
 local total_ticks = 0;
@@ -70,26 +89,190 @@ end
 
 local my_settings = nil;
 
+local host = "irc.chat.twitch.tv";
+local port = 6667;
+local bot_socket = nil;
+
+local auth_success = false;
+local auth_requested = false;
+
+function bot_socket_tick()
+	print("Bot Tick");
+
+	if bot_socket:is_connected() then
+		
+		if not auth_success and not auth_requested then
+			auth();
+		end
+		
+		local response = receive();
+		
+		if response then
+			for line in response:gmatch("[^\n]+") do
+				repeat
+					if not auth_success then
+						auth_requested = false;
+						if line:match(":tmi.twitch.tv 001") then
+							print("Authentication success!");
+							auth_success = true;
+							send("JOIN #" .. nickname);
+							do break end
+						else 
+							print("Authentication failed! Socket closed! Try reconnecting manually...");
+							bot_socket:close();
+							reset_bot_data();
+							
+							return;
+						end
+					end
+				
+					if line:match("PING") then
+						send("PONG");
+						print("PING PONG");
+						do break end
+					end
+				
+					local i = 0;
+					local to_user = "";
+					local command = "";
+					
+					for word in line:gmatch("[^%s]+") do
+						if i == 0 then
+							local j = 0;
+							for token in word:gmatch("[^!]+") do
+								if j == 0 then
+									to_user = token:sub(2);
+								end
+								j = j + 1;
+							end
+							
+						end
+						
+						if i == 1 then
+							if word ~= "PRIVMSG" then
+								return;
+							end
+						end
+						
+						if i == 3 then
+							command = word:sub(2):lower();
+						end
+						
+						if i == 4 then
+							to_user = word;
+						end
+						
+						i = i + 1;
+					end
+					
+					if command:match("^!missed_frames") or command:match("^!missedframes") or command:match("^!missed") then
+						send("PRIVMSG #" .. nickname .. " :@" .. to_user .. " -> Missed frames: " .. lagged_frames_string .. "/" .. lagged_total_frames_string .. " (" .. lagged_percents_string .. "%)");
+						
+					elseif command:match("^!skipped_frames") or command:match("^!skippedframes") or command:match("^!skipped") then
+						send("PRIVMSG #" .. nickname .. " :@" .. to_user .. " -> Skipped frames: " .. skipped_frames_string .. "/" .. skipped_total_frames_string .. " (" .. skipped_percents_string .. "%)");
+						
+					elseif command:match("^!dropped_frames") or command:match("^!droppedframes") or command:match("^!dropped") then
+						send("PRIVMSG #" .. nickname .. " :@" .. to_user .. " -> Dropped frames: " .. dropped_frames_string .. "/" .. dropped_total_frames_string .. " (" .. dropped_percents_string .. "%)");
+						
+					elseif command:match("^!congestion") then
+						send("PRIVMSG #" .. nickname .. " :@" .. to_user .. " -> Congestion: " .. congestion_string .. "% (average: " .. average_congestion_string .. "%)");
+						
+					elseif command:match("^!frame_time") or command:match("^!render_time") or command:match("^!frametime") or command:match("^!rendertime") then
+						send("PRIVMSG #" .. nickname .. " :@" .. to_user .. " -> Average frame time: " .. average_frame_time_string .. " ms");
+						
+					elseif command:match("^!memory_usage") or command:match("^!memoryusage") or command:match("^!memory") then
+						send("PRIVMSG #" .. nickname .. " :@" .. to_user .. " -> Memory usage: " .. memory_usage_string .. " MB");
+						
+					elseif command:match("^!bitrate") then
+						send("PRIVMSG #" .. nickname .. " :@" .. to_user .. " -> Bitrate: " .. bitrate_string .. " Kb/s");
+						
+					elseif command:match("^!fps") or command:match("^!framerate") then
+						send("PRIVMSG #" .. nickname .. " :@" .. to_user .. " -> FPS: " .. fps_string);
+						
+					elseif command:match("^!obsstats") then
+						send("PRIVMSG #" .. nickname .. " :@" .. to_user .. " -> Missed frames: " .. lagged_frames_string .. "/" .. lagged_total_frames_string .. " (" .. lagged_percents_string .. "%), " ..
+						"Skipped frames: " .. skipped_frames_string .. "/" .. skipped_total_frames_string .. " (" .. skipped_percents_string .. "%), " ..
+						"Dropped frames: " .. dropped_frames_string .. "/" .. dropped_total_frames_string .. " (" .. dropped_percents_string .. "%), " ..
+						"Congestion: " .. congestion_string .. "% (average: " .. average_congestion_string .. "%), " ..
+						"Average frame time: " .. average_frame_time_string .. " ms, " ..
+						"Memory usage: " .. memory_usage_string .. " MB, " ..
+						"Bitrate: " .. bitrate_string .. " Kb/s, " ..
+						"FPS: " .. fps_string);
+					end
+					
+					do break end
+				until true
+			end
+		end
+	end
+end
+
+function reset_bot_data()
+	auth_success = false;
+	auth_requested = false;
+end
+
+function auth()
+	print("Authentication attempt.");
+	assert(bot_socket:send(
+		"PASS " ..  password ..
+		"\n" ..
+		"NICK " .. nickname ..
+		"\r\n"
+	));
+	auth_requested = true;
+end
+
+function send(message)
+	assert(bot_socket:send(
+			message ..
+			"\r\n"
+		));
+end
+
+function receive()
+	local response, err = bot_socket:receive();
+	if response then
+		print(response);
+		return response;
+	elseif err ~= "timeout" then
+		error(err);
+	end
+end
+
 function timer_tick()
 	total_ticks = total_ticks + 1;
 	
 	local source = obs.obs_get_source_by_name(text_source);
 	
 	-- Not working for some reason?
+	-- Crashing on config_get_string mutex
 	-- I want to detect output mode automatically.
+	
 	--[[
-	local dst = ""
-	obs.os_get_config_path(dst, #dst, "obs-studio")
-	print("path: " .. dst)
+	local profile = obs.obs_frontend_get_current_profile();
+	print("profile: " .. profile);
+	
+	local profile_path = "                                                                                                                                                                                                                                                               ";
+	obs.os_get_config_path(profile_path, #profile_path, "obs-studio\\basic\\profiles\\" ..profile .. "\\basic.ini");
+	print("path: " .. profile_path);
+	
+	local config = obs.obs_frontend_get_profile_config();
+	local gconfig = obs.obs_frontend_get_global_config();
+
+	print("config: " .. tostring(config));
+	print("config: " .. tostring(gconfig));
+
+	if obsffi ~= nil then
+		local mode = obsffi.config_get_string(config, "Output", "Mode");
+		--local gmode = obsffi.config_get_string(gconfig, "Output", "Mode");
+
+		print("config: " .. tostring(mode));
+		print("config: " .. tostring(gmode));
+	end
 	--]]
 	
-	--local profile = obs.obs_frontend_get_current_profile()
-	--print("profile: " .. profile)
-	
-	--local profile_path = "                                                                                                                                                                                                                                                               "
-	--obs.os_get_config_path(profile_path, #profile_path, "obs-studio\\basic\\profiles\\" ..profile .. "\\basic.ini")
-	--print("path: " .. profile_path)
-	
+
 	--local config = nil
 	--local config_open_success = obs.config_open(config, profile_path, 0)
 	--print("success: " .. tostring(config_open_success))
@@ -97,11 +280,16 @@ function timer_tick()
 	--obs.config_close(config)
 	
 	--Not working for some reason?
-	--local cpu_info = obs.os_cpu_usage_info_start();
-	--local usage = obs.os_cpu_usage_info_query(cpu_info);
-	--print(tostring(usage));
-	--obs.os_cpu_usage_info_destroy(cpu_info);
-	
+	--info_query return nan
+	--[[
+	if obsffi ~= nil then
+		local cpu_info = obsffi.os_cpu_usage_info_start();
+		print(tostring(cpu_info));
+		local usage = obsffi.os_cpu_usage_info_query(cpu_info);
+		print(usage);
+		obsffi.os_cpu_usage_info_destroy(cpu_info);
+	end
+	--]]
 	
 	-- Get memory usage
 	local memory_usage = obs.os_get_proc_resident_size() / (1024.0 * 1024.0);
@@ -237,6 +425,28 @@ function reset_formatting(properties, property)
 	return true;
 end
 
+function reconnect_bot()
+	print("Reconnecting Bot...");
+	if is_timer_on then
+		obs.timer_remove(bot_socket_tick);
+	end
+	
+	if bot_socket then 
+		bot_socket:close();
+	end
+	
+	reset_bot_data();
+
+	if is_bot_enabled then
+		bot_socket = assert(socket.create("inet", "stream", "tcp"));
+		assert(bot_socket:set_blocking(false));
+		assert(bot_socket:connect(host, port));
+		
+		obs.timer_add(bot_socket_tick, bot_delay);
+	end
+end
+	
+
 function on_event(event)
 	if event == obs.OBS_FRONTEND_EVENT_FINISHED_LOADING then
 		print("scene loaded");
@@ -244,7 +454,16 @@ function on_event(event)
 		if is_script_enabled then
 			print("script is enabled");
 			is_timer_on = true;
-			obs.timer_add(timer_tick, callback_delay);
+			
+			obs.timer_add(timer_tick, timer_delay);
+			
+			if is_bot_enabled then
+				bot_socket = assert(socket.create("inet", "stream", "tcp"));
+				assert(bot_socket:set_blocking(false));
+				assert(bot_socket:connect(host, port));
+				
+				obs.timer_add(bot_socket_tick, bot_delay);
+			end
 		end
 	end
 end
@@ -253,14 +472,28 @@ function script_properties()
 	local properties = obs.obs_properties_create();
 
 	local enable_script_property = obs.obs_properties_add_bool(properties, "is_script_enabled", "Enable Script");
-
+	local enable_script_property = obs.obs_properties_add_bool(properties, "is_bot_enabled", "Enable Bot");
+	
 	local output_mode_property = obs.obs_properties_add_list(properties, "output_mode", "Output Mode", obs.OBS_COMBO_TYPE_LIST, obs.OBS_COMBO_FORMAT_STRING);
 	obs.obs_property_list_add_string(output_mode_property, "Simple", "simple_stream");
 	obs.obs_property_list_add_string(output_mode_property, "Advanced", "adv_stream");
 	obs.obs_property_set_long_description(output_mode_property, "Must match the output mode you are using in OBS -> Settings -> Output -> Output mode.");
 	
-	local callback_delay_property = obs.obs_properties_add_int(properties, "callback_delay", "Update Delay (ms)", 100, 2000, 100);
-	obs.obs_property_set_long_description(callback_delay_property, "Determines how often the data will update.");
+	local timer_delay_property = obs.obs_properties_add_int(properties, "timer_delay", "Update Delay (ms)", 100, 2000, 100);
+	obs.obs_property_set_long_description(timer_delay_property, "Determines how often the data will update.");
+	
+	local enable_script_property = obs.obs_properties_add_bool(properties, "is_script_enabled", "Enable Script");
+	
+	local timer_delay_property = obs.obs_properties_add_int(properties, "bot_delay", "Bot Delay (ms)", 500, 5000, 100);
+	obs.obs_property_set_long_description(timer_delay_property, "Determines how often the bot will read chat and write to it.");
+	
+	local oauth_property = obs.obs_properties_add_text(properties, "nickname", "Nickname", obs.OBS_TEXT_DEFAULT);
+	obs.obs_property_set_long_description(output_mode_property, "Your nicknamename on twitch.");
+	
+	local oauth_property = obs.obs_properties_add_text(properties, "password", "OAuth Password", obs.OBS_TEXT_PASSWORD);
+	obs.obs_property_set_long_description(output_mode_property, "Format: oauth:xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx. Visit https://twitchapps.com/tmi/ to get your AOuth Password.");
+	
+	obs.obs_properties_add_button(properties, "reconnect_bot_button", "Reconnect Bot...", reconnect_bot);
 	
 	local text_source_property = obs.obs_properties_add_list(properties,
 		"text_source", "Text Source", obs.OBS_COMBO_TYPE_EDITABLE, obs.OBS_COMBO_FORMAT_STRING);
@@ -287,8 +520,15 @@ end
 
 function script_defaults(settings)
 	obs.obs_data_set_default_bool(settings, "is_script_enabled", true);
+	obs.obs_data_set_default_bool(settings, "is_bot_enabled", true);
 	obs.obs_data_set_default_string(settings, "output_mode", "simple_stream");
-	obs.obs_data_set_default_int(settings, "callback_delay", 1000);
+	
+	obs.obs_data_set_default_int(settings, "timer_delay", 1000);
+	obs.obs_data_set_default_int(settings, "bot_delay", 2000);
+	
+	obs.obs_data_set_default_string(settings, "nickname", "");
+	obs.obs_data_set_default_string(settings, "password", "");
+	
 	obs.obs_data_set_default_string(settings, "text_source", "");
 	obs.obs_data_set_default_string(settings, "text_formatting", default_text_formatting);
 end
@@ -297,14 +537,28 @@ function script_update(settings)
 	my_settings = settings;
 
 	is_script_enabled = obs.obs_data_get_bool(settings, "is_script_enabled");
+	is_bot_enabled = obs.obs_data_get_bool(settings, "is_bot_enabled");
 	output_mode = obs.obs_data_get_string(settings, "output_mode");
-	callback_delay = obs.obs_data_get_int(settings, "callback_delay");
+	
+	timer_delay = obs.obs_data_get_int(settings, "timer_delay");
+	bot_delay = obs.obs_data_get_int(settings, "bot_delay");
+	
+	nickname = obs.obs_data_get_string(settings, "nickname");
+	password = obs.obs_data_get_string(settings, "password");
+	
 	text_source = obs.obs_data_get_string(settings, "text_source");
-
+	
 	text_formatting = obs.obs_data_get_string(settings, "text_formatting");
 
 	if is_timer_on then
 		obs.timer_remove(timer_tick);
+		obs.timer_remove(bot_socket_tick);
+		
+		if bot_socket then 
+			bot_socket:close();
+		end
+		reset_bot_data();
+		
 		is_timer_on = false;
 	end
 
@@ -326,15 +580,26 @@ function script_update(settings)
 	
 	print("Script is reloaded");
 	is_timer_on = true;
-	obs.timer_add(timer_tick, callback_delay);
+	
+	if is_bot_enabled then 
+		bot_socket = assert(socket.create("inet", "stream", "tcp"));
+		assert(bot_socket:set_blocking(false));
+		assert(bot_socket:connect(host, port));
+		
+		obs.timer_add(bot_socket_tick, bot_delay);
+	end
+	
+	obs.timer_add(timer_tick, timer_delay);
 end
 
 function script_description()
 	return [[
 <center><h2>OBS Stats on Stream v0.5</h2></center>
 <center><a href="https://twitch.tv/GreenComfyTea">twitch.tv/GreenComfyTea</a> - 2021</center>
-<center><p>Shows missed frames, skipped frames, dropped frames, congestion, bitrate, fps, memory usage and average frame time on stream as text source.</p></center>
+<center><p>Shows missed frames, skipped frames, dropped frames, congestion, bitrate, fps, memory usage and average frame time on stream as text source and/or in chat.</p></center>
 <center><a href="https://github.com/GreenComfyTea/OBS-Stats-on-Stream/blob/main/Text-Formatting-Variables.md">Text Formatting Variables</a></center>
+<center><a href="https://github.com/GreenComfyTea/OBS-Stats-on-Stream/blob/main/Bot-Commands.md">Bot commands.</a></center>
+<center><a href="https://twitchapps.com/tmi/">Twitch Chat OAuth Password Generator</a></center>
 <hr/>
 ]];
 end
