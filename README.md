@@ -29,6 +29,7 @@ The script allow to shows missed frames, skipped frames, dropped frames, congest
 5. You are ready to go!
 
 >**:pushpin: NOTE:**   If you don't need Text Source functionality, you don't need to add a text source and link it in the script.
+
 >**:pushpin: NOTE:**   If you don't need Twitch Bot functionality, you can use `Enable Bot` checkbox to disable it. You also don't need to type `Nickname` and `OAuth Password` in that case.
 
 >**:pushpin: NOTE:**   Bot only works on Twitch. I have no knowledge nor intentions to make it work on YT or any other platform.
