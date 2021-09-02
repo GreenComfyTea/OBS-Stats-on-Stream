@@ -156,7 +156,12 @@ function bot_socket_tick()
 						end
 						
 						if i == 4 then
-							to_user = word;
+							if word:match("^@") then
+								to_user = word:sub(2);
+							else
+								to_user = word;
+							end
+							
 						end
 						
 						i = i + 1;
