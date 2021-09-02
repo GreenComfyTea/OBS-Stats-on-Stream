@@ -29,7 +29,7 @@ ffi.cdef[[
 local output_mode = "simple_stream";
 
 local timer_delay = 1000;
-local bot_delay = 1000;
+local bot_delay = 2000;
 
 local password = "";
 local nickname = "justinfan4269";
@@ -161,40 +161,33 @@ function bot_socket_tick()
 						
 						i = i + 1;
 					end
-					
+
 					if command:match("^!missed_frames") or command:match("^!missedframes") or command:match("^!missed") then
-						send("PRIVMSG #" .. nickname .. " :@" .. to_user .. " -> Missed frames: " .. lagged_frames_string .. "/" .. lagged_total_frames_string .. " (" .. lagged_percents_string .. "%)");
+						send_message(string.format("@%s -> Missed frames: %s/%s (%s%%)", to_user, lagged_frames_string, laged_total_frames_string, laged_percents_string));
 						
 					elseif command:match("^!skipped_frames") or command:match("^!skippedframes") or command:match("^!skipped") then
-						send("PRIVMSG #" .. nickname .. " :@" .. to_user .. " -> Skipped frames: " .. skipped_frames_string .. "/" .. skipped_total_frames_string .. " (" .. skipped_percents_string .. "%)");
+						send_message(string.format("@%s -> Skipped frames: %s/%s (%s%%)", to_user, skipped_frames_string, skipped_total_frames_string, skipped_percents_string));
 						
 					elseif command:match("^!dropped_frames") or command:match("^!droppedframes") or command:match("^!dropped") then
-						send("PRIVMSG #" .. nickname .. " :@" .. to_user .. " -> Dropped frames: " .. dropped_frames_string .. "/" .. dropped_total_frames_string .. " (" .. dropped_percents_string .. "%)");
+						send_message(string.format("@%s -> Dropped frames: %s/%s (%s%%)", to_user, dropped_frames_string, dropped_total_frames_string, dropped_percents_string));
 						
 					elseif command:match("^!congestion") then
-						send("PRIVMSG #" .. nickname .. " :@" .. to_user .. " -> Congestion: " .. congestion_string .. "% (average: " .. average_congestion_string .. "%)");
+						send_message(string.format("@%s -> Congestion: %s%% (average: %s%%)", to_user, congestion_string, average_congestion_string));
 						
 					elseif command:match("^!frame_time") or command:match("^!render_time") or command:match("^!frametime") or command:match("^!rendertime") then
-						send("PRIVMSG #" .. nickname .. " :@" .. to_user .. " -> Average frame time: " .. average_frame_time_string .. " ms");
+						send_message(string.format("@%s -> Average frame time: %s ms", to_user, average_frame_time_string));
 						
 					elseif command:match("^!memory_usage") or command:match("^!memoryusage") or command:match("^!memory") then
-						send("PRIVMSG #" .. nickname .. " :@" .. to_user .. " -> Memory usage: " .. memory_usage_string .. " MB");
+						send_message(string.format("@%s -> Memory usage: %s MB", to_user, memory_usage_string));
 						
 					elseif command:match("^!bitrate") then
-						send("PRIVMSG #" .. nickname .. " :@" .. to_user .. " -> Bitrate: " .. bitrate_string .. " Kb/s");
+						send_message(string.format("@%s -> Bitrate: %s kb/s", to_user, bitrate));
 						
 					elseif command:match("^!fps") or command:match("^!framerate") then
-						send("PRIVMSG #" .. nickname .. " :@" .. to_user .. " -> FPS: " .. fps_string);
+						send_message(string.format("@%s -> FPS: %s", to_user, fps_string));
 						
 					elseif command:match("^!obsstats") then
-						send("PRIVMSG #" .. nickname .. " :@" .. to_user .. " -> Missed frames: " .. lagged_frames_string .. "/" .. lagged_total_frames_string .. " (" .. lagged_percents_string .. "%), " ..
-						"Skipped frames: " .. skipped_frames_string .. "/" .. skipped_total_frames_string .. " (" .. skipped_percents_string .. "%), " ..
-						"Dropped frames: " .. dropped_frames_string .. "/" .. dropped_total_frames_string .. " (" .. dropped_percents_string .. "%), " ..
-						"Congestion: " .. congestion_string .. "% (average: " .. average_congestion_string .. "%), " ..
-						"Average frame time: " .. average_frame_time_string .. " ms, " ..
-						"Memory usage: " .. memory_usage_string .. " MB, " ..
-						"Bitrate: " .. bitrate_string .. " Kb/s, " ..
-						"FPS: " .. fps_string);
+						send_message(string.format("@%s -> Missed frames: %s/%s (%s%%), Skipped frames: %s/%s (%s%%), Dropped frames: %s/%s (%s%%), Congestion: %s%% (average: %s%%), Average frame time: %s ms, Memory usage: %s MB, Bitrate: %s kb/s, FPS: %s", to_user, lagged_frames_string, laged_total_frames_string, laged_percents_string, skipped_frames_string, skipped_total_frames_string, skipped_percents_string, dropped_frames_string, dropped_total_frames_string, dropped_percents_string, congestion_string, average_congestion_string, average_frame_time_string, memory_usage_string, bitrate, fps_string));
 					end
 					
 					do break end
@@ -212,19 +205,21 @@ end
 function auth()
 	print("Authentication attempt.");
 	assert(bot_socket:send(
-		"PASS " ..  password ..
-		"\n" ..
-		"NICK " .. nickname:lower() ..
-		"\r\n"
+		string.format("PASS %s\r\nNICK %s\r\n", password, nickname)
 	));
 	auth_requested = true;
 end
 
 function send(message)
 	assert(bot_socket:send(
-			message ..
-			"\r\n"
-		));
+		string.format("%s\r\n", message)
+	));
+end
+
+function send_message(message)
+	assert(bot_socket:send(
+		string.format("PRIVMSG #%s :%s\r\n", nickname, message)
+	));
 end
 
 function receive()
@@ -520,7 +515,7 @@ function script_defaults(settings)
 	obs.obs_data_set_default_int(settings, "timer_delay", 1000);
 	obs.obs_data_set_default_int(settings, "bot_delay", 2000);
 	
-	obs.obs_data_set_default_string(settings, "nickname", "");
+	obs.obs_data_set_default_string(settings, "nickname", "justinfan4269");
 	obs.obs_data_set_default_string(settings, "password", "");
 	
 	obs.obs_data_set_default_string(settings, "text_source", "");
@@ -537,7 +532,7 @@ function script_update(settings)
 	timer_delay = obs.obs_data_get_int(settings, "timer_delay");
 	bot_delay = obs.obs_data_get_int(settings, "bot_delay");
 	
-	nickname = obs.obs_data_get_string(settings, "nickname");
+	nickname = obs.obs_data_get_string(settings, "nickname"):lower();
 	password = obs.obs_data_get_string(settings, "password");
 	
 	text_source = obs.obs_data_get_string(settings, "text_source");
