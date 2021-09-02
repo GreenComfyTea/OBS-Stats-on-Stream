@@ -1,5 +1,5 @@
 # OBS Stats on Stream
-The script allow to shows missed frames, skipped frames, dropped frames, congestion, bitrate, fps, memory usage and average frame time on stream as text source and/or in chat.
+The script allow to shows missed frames, skipped frames, dropped frames, congestion, bitrate, fps, memory usage and average frame time on stream as text source and/or in Twitch chat.
 
 <table style="width:100%">
 <tr><th colspan="2"></th></tr>
@@ -18,7 +18,7 @@ The script allow to shows missed frames, skipped frames, dropped frames, congest
 2. Add a text source to your scene. This source will be used to display the data.
 3. Open Tools -> Scripts. Add the `OBS-Stats-on-Stream.lua` script (only this one).
 4. Configure the script.
-	* If you don't need Bot functionality, uncheck `Enable Bot` mark.
+	* If you don't need Twitch Bot functionality, uncheck `Enable Bot` mark.
     * `Output Mode` must match the OBS encoder mode. Check it by going `OBS -> Settings -> Output -> Output Mode` (on the very top).
     * `Update Delay` determines how often the data will be updated. 1000 ms means once a second. 100 ms means 10 times a second.
 	* `Bot Delay` determines how often the bot will read chat and write to it.
@@ -29,7 +29,8 @@ The script allow to shows missed frames, skipped frames, dropped frames, congest
 5. You are ready to go!
 
 >**:pushpin: NOTE:**   If you don't need Text Source functionality, you don't need to add a text source and link it in the script.
->**:pushpin: NOTE:**   If you don't need Bot functionality, you can use `Enable Bot` checkbox to disable it. You also don't need to type `Nickname` and `OAuth Password` in that case. 
+>**:pushpin: NOTE:**   If you don't need Twitch Bot functionality, you can use `Enable Bot` checkbox to disable it. You also don't need to type `Nickname` and `OAuth Password` in that case. 
+>**:pushpin: NOTE:**   Bot only works on Twitch. I have no knowledge nor intentions to make it work on YT or any other platform.
 
 # TODO
 * Automatic Output Mode?
