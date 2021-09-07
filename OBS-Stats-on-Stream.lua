@@ -168,7 +168,7 @@ function bot_socket_tick()
 					end
 
 					if command:match("^!missed_frames") or command:match("^!missedframes") or command:match("^!missed") then
-						send_message(string.format("@%s -> Missed frames: %s/%s (%s%%)", to_user, lagged_frames_string, laged_total_frames_string, laged_percents_string));
+						send_message(string.format("@%s -> Missed frames: %s/%s (%s%%)", to_user, lagged_frames_string, lagged_total_frames_string, lagged_percents_string));
 						
 					elseif command:match("^!skipped_frames") or command:match("^!skippedframes") or command:match("^!skipped") then
 						send_message(string.format("@%s -> Skipped frames: %s/%s (%s%%)", to_user, skipped_frames_string, skipped_total_frames_string, skipped_percents_string));
@@ -186,13 +186,13 @@ function bot_socket_tick()
 						send_message(string.format("@%s -> Memory usage: %s MB", to_user, memory_usage_string));
 						
 					elseif command:match("^!bitrate") then
-						send_message(string.format("@%s -> Bitrate: %s kb/s", to_user, bitrate));
+						send_message(string.format("@%s -> Bitrate: %s kb/s", to_user, bitrate_string));
 						
 					elseif command:match("^!fps") or command:match("^!framerate") then
 						send_message(string.format("@%s -> FPS: %s", to_user, fps_string));
 						
 					elseif command:match("^!obsstats") then
-						send_message(string.format("@%s -> Missed frames: %s/%s (%s%%), Skipped frames: %s/%s (%s%%), Dropped frames: %s/%s (%s%%), Congestion: %s%% (average: %s%%), Average frame time: %s ms, Memory usage: %s MB, Bitrate: %s kb/s, FPS: %s", to_user, lagged_frames_string, laged_total_frames_string, laged_percents_string, skipped_frames_string, skipped_total_frames_string, skipped_percents_string, dropped_frames_string, dropped_total_frames_string, dropped_percents_string, congestion_string, average_congestion_string, average_frame_time_string, memory_usage_string, bitrate, fps_string));
+						send_message(string.format("@%s -> Missed frames: %s/%s (%s%%), Skipped frames: %s/%s (%s%%), Dropped frames: %s/%s (%s%%), Congestion: %s%% (average: %s%%), Average frame time: %s ms, Memory usage: %s MB, Bitrate: %s kb/s, FPS: %s", to_user, lagged_frames_string, laged_total_frames_string, laged_percents_string, skipped_frames_string, skipped_total_frames_string, skipped_percents_string, dropped_frames_string, dropped_total_frames_string, dropped_percents_string, congestion_string, average_congestion_string, average_frame_time_string, memory_usage_string, bitrate_string, fps_string));
 					end
 					
 					do break end
@@ -377,7 +377,6 @@ function timer_tick()
 	memory_usage_string = string.format("%.1f", memory_usage);
 	bitrate_string = string.format("%.0f", bitrate);
 	fps_string = string.format("%.2g", fps);
-	
 	
 	-- Make a string for display in a text source
 	local formatted_text = text_formatting;
