@@ -1,5 +1,5 @@
 # OBS Stats on Stream
-The script allow to shows missed frames, skipped frames, dropped frames, congestion, bitrate, fps, memory usage and average frame time on stream as text source and/or in Twitch chat.
+The script allow to shows missed frames, skipped frames, dropped frames, congestion, bitrate, fps, memory usage and average frame time on stream as text source and/or in Twitch chat (Custom Bot Supported).
 
 <table style="width:100%">
 <tr><th colspan="2"></th></tr>
@@ -10,8 +10,10 @@ The script allow to shows missed frames, skipped frames, dropped frames, congest
   <tr><th colspan="2"></th></tr>
 </table>
 
-<img src="https://i.imgur.com/GkgDgFE.png" />
+<img src="https://i.imgur.com/i7RtOyy.png" />
 <img src="https://i.imgur.com/QA2VMT1.png" />
+<img src="https://i.imgur.com/8izp0UJ.png" />
+
 
 # How to use
 1. Download the script files. You only need `OBS-Stats-on-Stream.lua` and `ljsocket.lua`. These two files must be placed in the same folder.
@@ -22,15 +24,17 @@ The script allow to shows missed frames, skipped frames, dropped frames, congest
     * `Output Mode` must match the OBS encoder mode. Check it by going `OBS -> Settings -> Output -> Output Mode` (on the very top).
     * `Update Delay` determines how often the data will be updated. 1000 ms means once a second. 100 ms means 10 times a second.
 	* `Bot Delay` determines how often the bot will read chat and write to it.
-    * Link your created text source.
-	* Enter your twitch nickname in `Nickname` field.
-	* Enter `OAuth Password` for your twitch account. You can get it here: [click](https://twitchapps.com/tmi).
+    
+	* Enter bot's (or your own) nickname in `Bot Nickname` field.
+	* Enter `Bot OAuth Password` for the bot's (or your own) twitch account. You can get it here: [click](https://twitchapps.com/tmi).
+	* Enter `Channel Nickname` where your bot to join (it gonna accept command from this chat and print there). PLEASE, ONLY JOIN YOUR OWN CHANNEL. DO NOT TRY TO JOIN OTHER CHANNELS.
+	* Link your created text source.
     * Modify `Text Formatting` if needed. all $name are variables and are replaced with actual values.
 5. You are ready to go!
 
 >**:pushpin: NOTE:**   If you don't need Text Source functionality, you don't need to add a text source and link it in the script.
 
->**:pushpin: NOTE:**   If you don't need Twitch Bot functionality, you can use `Enable Bot` checkbox to disable it. You also don't need to type `Nickname` and `OAuth Password` in that case.
+>**:pushpin: NOTE:**   If you don't need Twitch Bot functionality, you can use `Enable Bot` checkbox to disable it. You also don't need to type `Bot Nickname`, `Bot OAuth Password` and `Channel Nickname` in that case.
 
 >**:pushpin: NOTE:**   Bot only works on Twitch. I have no knowledge nor intentions to make it work on YT or any other platform.
 

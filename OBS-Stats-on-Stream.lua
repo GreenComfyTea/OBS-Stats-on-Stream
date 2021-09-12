@@ -31,8 +31,12 @@ local output_mode = "simple_stream";
 local timer_delay = 1000;
 local bot_delay = 2000;
 
-local password = "";
-local nickname = "justinfan4269";
+local use_custom_bot = false;
+
+local channel_nickname = "";
+
+local bot_password = "";
+local bot_nickname = "justinfan4269";
 
 local text_source = "";
 local text_formatting = "";
@@ -110,22 +114,28 @@ function bot_socket_tick()
 					if not auth_success then
 						auth_requested = false;
 						if line:match(":tmi.twitch.tv 001") then
-							print("Authentication success!");
+							bot_nickname = get_real_nickname(line);
+							print("Authentication success: " .. bot_nickname);
 							auth_success = true;
-							send("JOIN #" .. nickname);
+							
+							send("JOIN #" .. channel_nickname);
 							do break end
 						else 
-							print("Authentication failed! Socket closed! Try reconnecting manually...");
-							bot_socket:close();
-							reset_bot_data();
+							print("Authentication to " .. bot_nickname .. " failed! Socket closed! Try reconnecting manually...");
 							
+							close_socket();
 							return;
 						end
 					end
-				
+					
 					if line:match("PING") then
 						send("PONG");
 						print("PING PONG");
+						do break end
+					end
+					
+					if line:match("JOIN") then
+						print("Joined channel: " .. channel_nickname);
 						do break end
 					end
 				
@@ -202,17 +212,12 @@ function bot_socket_tick()
 	end
 end
 
-function reset_bot_data()
-	auth_success = false;
-	auth_requested = false;
-end
-
 function auth()
-	print("Authentication attempt.");
-	assert(bot_socket:send(
-		string.format("PASS %s\r\nNICK %s\r\n", password, nickname)
-	));
+	print("Authentication attempt: " .. bot_nickname);
 	auth_requested = true;
+	assert(bot_socket:send(
+		string.format("PASS %s\r\nNICK %s\r\n", bot_password, bot_nickname)
+	));
 end
 
 function send(message)
@@ -223,7 +228,7 @@ end
 
 function send_message(message)
 	assert(bot_socket:send(
-		string.format("PRIVMSG #%s :%s\r\n", nickname, message)
+		string.format("PRIVMSG #%s :%s\r\n", channel_nickname, message)
 	));
 end
 
@@ -236,7 +241,50 @@ function receive()
 	end
 end
 
-function timer_tick()
+function get_real_nickname(line)
+	local i = 0;
+	for word in line:gmatch("[^%s]+") do
+		if i == 2 then
+			return word;
+		end
+		i = i + 1;
+	end
+end
+
+function recconect()
+	print("Reconnecting...");
+	
+	close_socket();
+
+	if is_bot_enabled then
+		init_socket();
+	end
+end
+	
+function init_socket()
+	bot_socket = assert(socket.create("inet", "stream", "tcp"));
+	assert(bot_socket:set_blocking(false));
+	assert(bot_socket:connect(host, port));
+	
+	obs.timer_add(bot_socket_tick, bot_delay);
+end
+
+function close_socket()					
+	obs.timer_remove(bot_socket_tick);
+
+	if bot_socket:is_connected() then
+		bot_socket:close();
+	end
+	
+	reset_bot_data();
+end
+
+function reset_bot_data()
+	auth_success = false;
+	auth_requested = false;
+end
+
+function obs_stats_tick()
 	total_ticks = total_ticks + 1;
 	
 	local source = obs.obs_get_source_by_name(text_source);
@@ -419,29 +467,13 @@ function reset_formatting(properties, property)
 
 	return true;
 end
-
-function reconnect_bot()
-	print("Reconnecting Bot...");
-	if is_timer_on then
-		obs.timer_remove(bot_socket_tick);
-	end
 	
-	if bot_socket then 
-		bot_socket:close();
-	end
-	
-	reset_bot_data();
-
-	if is_bot_enabled then
-		bot_socket = assert(socket.create("inet", "stream", "tcp"));
-		assert(bot_socket:set_blocking(false));
-		assert(bot_socket:connect(host, port));
-		
-		obs.timer_add(bot_socket_tick, bot_delay);
-	end
+function custom_bot_visibility(properties, property, settings)
+	obs.obs_property_set_visible(obs.obs_properties_get(properties, "bot_nickname"), use_custom_bot);
+	obs.obs_property_set_visible(obs.obs_properties_get(properties, "bot_password"), use_custom_bot);
+	return true;
 end
 	
-
 function on_event(event)
 	if event == obs.OBS_FRONTEND_EVENT_FINISHED_LOADING then
 		print("scene loaded");
@@ -450,14 +482,10 @@ function on_event(event)
 			print("script is enabled");
 			is_timer_on = true;
 			
-			obs.timer_add(timer_tick, timer_delay);
+			obs.timer_add(obs_stats_tick, timer_delay);
 			
 			if is_bot_enabled then
-				bot_socket = assert(socket.create("inet", "stream", "tcp"));
-				assert(bot_socket:set_blocking(false));
-				assert(bot_socket:connect(host, port));
-				
-				obs.timer_add(bot_socket_tick, bot_delay);
+				init_socket();
 			end
 		end
 	end
@@ -476,17 +504,21 @@ function script_properties()
 	
 	local timer_delay_property = obs.obs_properties_add_int(properties, "timer_delay", "Update Delay (ms)", 100, 2000, 100);
 	obs.obs_property_set_long_description(timer_delay_property, "Determines how often the data will update.");
-	
+
 	local bot_delay_property = obs.obs_properties_add_int(properties, "bot_delay", "Bot Delay (ms)", 500, 5000, 100);
 	obs.obs_property_set_long_description(bot_delay_property, "Determines how often the bot will read chat and write to it.");
 	
-	local nickname_property = obs.obs_properties_add_text(properties, "nickname", "Nickname", obs.OBS_TEXT_DEFAULT);
-	obs.obs_property_set_long_description(nickname_property, "Your nickname on twitch.");
 	
-	local oauth_property = obs.obs_properties_add_text(properties, "password", "OAuth Password", obs.OBS_TEXT_PASSWORD);
-	obs.obs_property_set_long_description(oauth_property, "Format: oauth:xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx. Visit https://twitchapps.com/tmi/ to get your AOuth Password.");
+	local bot_nickname_property = obs.obs_properties_add_text(properties, "bot_nickname", "Bot Nickname", obs.OBS_TEXT_DEFAULT);
+	obs.obs_property_set_long_description(bot_nickname_property, "Nickname of your bot.");
 	
-	obs.obs_properties_add_button(properties, "reconnect_bot_button", "Reconnect Bot...", reconnect_bot);
+	local bot_oauth_property = obs.obs_properties_add_text(properties, "bot_password", "Bot OAuth Password", obs.OBS_TEXT_PASSWORD);
+	obs.obs_property_set_long_description(bot_oauth_property, "Format: oauth:xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx. Visit https://twitchapps.com/tmi/ to get the AOuth Password for the bot (you must login to twitch.tv accordingly.");
+	
+	local channel_nickname_property = obs.obs_properties_add_text(properties, "channel_nickname", "Channel Nickname", obs.OBS_TEXT_DEFAULT);
+	obs.obs_property_set_long_description(channel_nickname_property, "Nickname of your channel for bot to join. If empty bot will join his own chat.");
+	
+	obs.obs_properties_add_button(properties, "recconect_button", "Reconnect...", recconect);
 	
 	local text_source_property = obs.obs_properties_add_list(properties,
 		"text_source", "Text Source", obs.OBS_COMBO_TYPE_EDITABLE, obs.OBS_COMBO_FORMAT_STRING);
@@ -518,9 +550,11 @@ function script_defaults(settings)
 	
 	obs.obs_data_set_default_int(settings, "timer_delay", 1000);
 	obs.obs_data_set_default_int(settings, "bot_delay", 2000);
+
+	obs.obs_data_set_default_string(settings, "bot_nickname", "");
+	obs.obs_data_set_default_string(settings, "bot_password", "");
 	
-	obs.obs_data_set_default_string(settings, "nickname", "justinfan4269");
-	obs.obs_data_set_default_string(settings, "password", "");
+	obs.obs_data_set_default_string(settings, "channel_nickname", "");
 	
 	obs.obs_data_set_default_string(settings, "text_source", "");
 	obs.obs_data_set_default_string(settings, "text_formatting", default_text_formatting);
@@ -536,30 +570,30 @@ function script_update(settings)
 	timer_delay = obs.obs_data_get_int(settings, "timer_delay");
 	bot_delay = obs.obs_data_get_int(settings, "bot_delay");
 	
-	nickname = obs.obs_data_get_string(settings, "nickname"):lower();
-	password = obs.obs_data_get_string(settings, "password");
+	bot_nickname = obs.obs_data_get_string(settings, "bot_nickname"):lower();
+	bot_password = obs.obs_data_get_string(settings, "bot_password");
+	
+	channel_nickname = obs.obs_data_get_string(settings, "channel_nickname"):lower();
 	
 	text_source = obs.obs_data_get_string(settings, "text_source");
 	
 	text_formatting = obs.obs_data_get_string(settings, "text_formatting");
-
-	if is_timer_on then
-		obs.timer_remove(timer_tick);
-		obs.timer_remove(bot_socket_tick);
+	
+	if s == nil or s:match("%S") == nil then
+		channel_nickname = bot_nickname;
+	end
+	
+	if is_obs_stats_timer_on then
+		close_socket();
 		
-		if bot_socket then 
-			bot_socket:close();
-		end
-		reset_bot_data();
-		
-		is_timer_on = false;
+		is_obs_stats_timer_on = false;
 	end
 
 	local source = obs.obs_get_source_by_name(text_source)
 
 	if source == nil then
 		print("No source found");
-		is_timer_on = false;
+		is_obs_stats_timer_on = false;
 		return;
 	end
 	
@@ -567,27 +601,23 @@ function script_update(settings)
 	
 	if not is_script_enabled then
 		print("Script is disabled");
-		is_timer_on = false;
+		is_obs_stats_timer_on = false;
 		return;
 	end
 	
 	print("Script is reloaded");
-	is_timer_on = true;
+	is_obs_stats_timer_on = true;
 	
 	if is_bot_enabled then 
-		bot_socket = assert(socket.create("inet", "stream", "tcp"));
-		assert(bot_socket:set_blocking(false));
-		assert(bot_socket:connect(host, port));
-		
-		obs.timer_add(bot_socket_tick, bot_delay);
+		init_socket();
 	end
 	
-	obs.timer_add(timer_tick, timer_delay);
+	obs.timer_add(obs_stats_tick, timer_delay);
 end
 
 function script_description()
 	return [[
-<center><h2>OBS Stats on Stream v0.6</h2></center>
+<center><h2>OBS Stats on Stream v0.7</h2></center>
 <center><a href="https://twitch.tv/GreenComfyTea">twitch.tv/GreenComfyTea</a> - 2021</center>
 <center><p>Shows missed frames, skipped frames, dropped frames, congestion, bitrate, fps, memory usage and average frame time on stream as text source and/or in Twitch chat.</p></center>
 <center><a href="https://twitchapps.com/tmi/">Twitch Chat OAuth Password Generator</a></center>
