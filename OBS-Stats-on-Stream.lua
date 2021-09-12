@@ -31,12 +31,10 @@ local output_mode = "simple_stream";
 local timer_delay = 1000;
 local bot_delay = 2000;
 
-local use_custom_bot = false;
-
-local channel_nickname = "";
-
 local bot_password = "";
 local bot_nickname = "justinfan4269";
+
+local channel_nickname = "";
 
 local text_source = "";
 local text_formatting = "";
@@ -467,13 +465,7 @@ function reset_formatting(properties, property)
 
 	return true;
 end
-	
-function custom_bot_visibility(properties, property, settings)
-	obs.obs_property_set_visible(obs.obs_properties_get(properties, "bot_nickname"), use_custom_bot);
-	obs.obs_property_set_visible(obs.obs_properties_get(properties, "bot_password"), use_custom_bot);
-	return true;
-end
-	
+
 function on_event(event)
 	if event == obs.OBS_FRONTEND_EVENT_FINISHED_LOADING then
 		print("scene loaded");
@@ -507,7 +499,6 @@ function script_properties()
 
 	local bot_delay_property = obs.obs_properties_add_int(properties, "bot_delay", "Bot Delay (ms)", 500, 5000, 100);
 	obs.obs_property_set_long_description(bot_delay_property, "Determines how often the bot will read chat and write to it.");
-	
 	
 	local bot_nickname_property = obs.obs_properties_add_text(properties, "bot_nickname", "Bot Nickname", obs.OBS_TEXT_DEFAULT);
 	obs.obs_property_set_long_description(bot_nickname_property, "Nickname of your bot.");
@@ -623,7 +614,6 @@ function script_description()
 <center><a href="https://twitchapps.com/tmi/">Twitch Chat OAuth Password Generator</a></center>
 <center><a href="https://github.com/GreenComfyTea/OBS-Stats-on-Stream/blob/main/Text-Formatting-Variables.md">Text Formatting Variables</a></center>
 <center><a href="https://github.com/GreenComfyTea/OBS-Stats-on-Stream/blob/main/Bot-Commands.md">Bot commands</a></center>
-<br>
 <hr/>
 ]];
 end
