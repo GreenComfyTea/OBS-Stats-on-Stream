@@ -10,7 +10,7 @@ The script allow to shows missed frames, skipped frames, dropped frames, congest
   <tr><th colspan="2"></th></tr>
 </table>
 
-<img src="https://i.imgur.com/i7RtOyy.png" />
+<img src="https://i.imgur.com/mM6PfmZ.png" />
 <img src="https://i.imgur.com/QA2VMT1.png" />
 <img src="https://i.imgur.com/8izp0UJ.png" />
 
