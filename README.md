@@ -27,7 +27,7 @@ The script allow to shows missed frames, skipped frames, dropped frames, congest
     
 	* Enter bot's (or your own) nickname in `Bot Nickname` field.
 	* Enter `Bot OAuth Password` for the bot's (or your own) twitch account. You can get it here: [click](https://twitchapps.com/tmi).
-	* Enter `Channel Nickname` where your bot to join (it gonna accept commands from this chat and print there). PLEASE, ONLY JOIN YOUR OWN CHANNEL. DO NOT TRY TO JOIN OTHER CHANNELS.
+	* Enter `Channel Nickname` your bot gonna join (it gonna accept commands from this chat and print there). PLEASE, ONLY JOIN YOUR OWN CHANNEL. DO NOT TRY TO JOIN OTHER CHANNELS.
 	* Link your created text source.
     * Modify `Text Formatting` if needed. all $name are variables and are replaced with actual values.
 5. You are ready to go!
