@@ -12,5 +12,7 @@ $congestion<br>
 $average_congestion<br>
 $average_frame_time<br>
 $memory_usage<br>
+$cpu_cores<br>
+$cpu_usage<br>
 $bitrate<br>
 $fps</p>

@@ -1,5 +1,5 @@
 # OBS Stats on Stream
-The script allow to shows missed frames, skipped frames, dropped frames, congestion, bitrate, fps, memory usage and average frame time on stream as text source and/or in Twitch chat (Custom Bot Supported).
+The script allow to shows missed frames, skipped frames, dropped frames, congestion, bitrate, fps, memory usage,  cpu core count, cpu usage and average frame time on stream as text source and/or in Twitch chat (Custom Bot Supported).
 
 <table style="width:100%">
 <tr><th colspan="2"></th></tr>
@@ -10,7 +10,7 @@ The script allow to shows missed frames, skipped frames, dropped frames, congest
   <tr><th colspan="2"></th></tr>
 </table>
 
-<img src="https://i.imgur.com/mM6PfmZ.png" />
+<img src="https://i.imgur.com/Yn0jwYY.png" />
 <img src="https://i.imgur.com/QA2VMT1.png" />
 <img src="https://i.imgur.com/8izp0UJ.png" />
 
@@ -40,7 +40,6 @@ The script allow to shows missed frames, skipped frames, dropped frames, congest
 
 # TODO
 * Automatic Output Mode?
-* CPU Usage?
 
 # Contribution
 

@@ -45,6 +45,8 @@ Dropped frames: $dropped_frames/$dropped_total_frames ($dropped_percents%)
 Congestion: $congestion% (avg. $average_congestion%)
 Average frame time: $average_frame_time ms
 Memory Usage: $memory_usage MB
+CPU Cores: $cpu_cores
+CPU Usage: $cpu_usage%
 Bitrate: $bitrate kb/s
 FPS: $fps]];
 
@@ -66,6 +68,10 @@ local average_congestion_string = "";
 local bitrate_string = "";
 
 local memory_usage_string = "";
+local cpu_usage_string = "";
+
+local cpu_cores_string = "";
+
 local fps_string = "";
 local average_frame_time_string = "";
 
@@ -88,6 +94,8 @@ else
 	obsffi = ffi.load("obs"); -- Windows
 	-- Linux?
 end
+
+local cpu_info = nil;
 
 local my_settings = nil;
 
@@ -193,14 +201,20 @@ function bot_socket_tick()
 					elseif command:match("^!memory_usage") or command:match("^!memoryusage") or command:match("^!memory") then
 						send_message(string.format("@%s -> Memory usage: %s MB", to_user, memory_usage_string));
 						
+					elseif command:match("^!cpu_cores") or command:match("^!cpucores") or command:match("^!cores") then
+						send_message(string.format("@%s -> CPU cores: %s", to_user, cpu_cores_string));
+
+					elseif command:match("^!cpu_usage") or command:match("^!cpuusage") then
+						send_message(string.format("@%s -> CPU usage: %s%%", to_user, cpu_usage_string));
+
 					elseif command:match("^!bitrate") then
 						send_message(string.format("@%s -> Bitrate: %s kb/s", to_user, bitrate_string));
 						
 					elseif command:match("^!fps") or command:match("^!framerate") then
 						send_message(string.format("@%s -> FPS: %s", to_user, fps_string));
-						
+
 					elseif command:match("^!obsstats") then
-						send_message(string.format("@%s -> Missed frames: %s/%s (%s%%), Skipped frames: %s/%s (%s%%), Dropped frames: %s/%s (%s%%), Congestion: %s%% (average: %s%%), Average frame time: %s ms, Memory usage: %s MB, Bitrate: %s kb/s, FPS: %s", to_user, lagged_frames_string, lagged_total_frames_string, lagged_percents_string, skipped_frames_string, skipped_total_frames_string, skipped_percents_string, dropped_frames_string, dropped_total_frames_string, dropped_percents_string, congestion_string, average_congestion_string, average_frame_time_string, memory_usage_string, bitrate_string, fps_string));
+						send_message(string.format("@%s -> Missed frames: %s/%s (%s%%), Skipped frames: %s/%s (%s%%), Dropped frames: %s/%s (%s%%), Congestion: %s%% (average: %s%%), Average frame time: %s ms, Memory usage: %s MB, CPU cores: %s, CPU usage: %s%%, Bitrate: %s kb/s, FPS: %s", to_user, lagged_frames_string, lagged_total_frames_string, lagged_percents_string, skipped_frames_string, skipped_total_frames_string, skipped_percents_string, dropped_frames_string, dropped_total_frames_string, dropped_percents_string, congestion_string, average_congestion_string, average_frame_time_string, memory_usage_string, cpu_cores_string, cpu_usage_string, bitrate_string, fps_string));
 					end
 					
 					do break end
@@ -293,10 +307,10 @@ function reset_bot_data()
 	auth_requested = false;
 end
 
+
 function obs_stats_tick()
 	total_ticks = total_ticks + 1;
 	
-	local source = obs.obs_get_source_by_name(text_source);
 	
 	-- Not working for some reason?
 	-- Crashing on config_get_string mutex
@@ -334,15 +348,12 @@ function obs_stats_tick()
 	
 	--Not working for some reason?
 	--info_query return nan
-	--[[
+	
+	-- Get CPU usage
+	local cpu_usage = 0.0;
 	if obsffi ~= nil then
-		local cpu_info = obsffi.os_cpu_usage_info_start();
-		print(tostring(cpu_info));
-		local usage = obsffi.os_cpu_usage_info_query(cpu_info);
-		print(usage);
-		obsffi.os_cpu_usage_info_destroy(cpu_info);
+		cpu_usage = obsffi.os_cpu_usage_info_query(cpu_info);
 	end
-	--]]
 	
 	-- Get memory usage
 	local memory_usage = obs.os_get_proc_resident_size() / (1024.0 * 1024.0);
@@ -432,34 +443,41 @@ function obs_stats_tick()
 	
 	average_frame_time_string = string.format("%.1f", average_frame_time);
 	memory_usage_string = string.format("%.1f", memory_usage);
+	cpu_usage_string = string.format("%.1f", cpu_usage);
+
 	bitrate_string = string.format("%.0f", bitrate);
 	fps_string = string.format("%.2g", fps);
 	
-	-- Make a string for display in a text source
-	local formatted_text = text_formatting;
 
-	formatted_text = formatted_text:gsub("$missed_frames", lagged_frames_string);
-	formatted_text = formatted_text:gsub("$missed_total_frames", lagged_total_frames_string);
-	formatted_text = formatted_text:gsub("$missed_percents", lagged_percents_string);
-
-	formatted_text = formatted_text:gsub("$skipped_frames", skipped_frames_string);
-	formatted_text = formatted_text:gsub("$skipped_total_frames", skipped_total_frames_string);
-	formatted_text = formatted_text:gsub("$skipped_percents", skipped_percents_string);
-
-	formatted_text = formatted_text:gsub("$dropped_frames", dropped_frames_string);
-	formatted_text = formatted_text:gsub("$dropped_total_frames", dropped_total_frames_string);
-	formatted_text = formatted_text:gsub("$dropped_percents", dropped_percents_string);
-
-	formatted_text = formatted_text:gsub("$congestion", congestion_string);
-	formatted_text = formatted_text:gsub("$average_congestion",average_congestion_string);
-
-	formatted_text = formatted_text:gsub("$average_frame_time", average_frame_time_string);
-	formatted_text = formatted_text:gsub("$memory_usage", memory_usage_string);
-	formatted_text = formatted_text:gsub("$bitrate", bitrate_string);
-	formatted_text = formatted_text:gsub("$fps", fps_string);
-
+	local source = obs.obs_get_source_by_name(text_source);
 	-- Update text source
 	if source ~= nil then
+		-- Make a string for display in a text source
+		local formatted_text = text_formatting;
+
+		formatted_text = formatted_text:gsub("$missed_frames", lagged_frames_string);
+		formatted_text = formatted_text:gsub("$missed_total_frames", lagged_total_frames_string);
+		formatted_text = formatted_text:gsub("$missed_percents", lagged_percents_string);
+
+		formatted_text = formatted_text:gsub("$skipped_frames", skipped_frames_string);
+		formatted_text = formatted_text:gsub("$skipped_total_frames", skipped_total_frames_string);
+		formatted_text = formatted_text:gsub("$skipped_percents", skipped_percents_string);
+
+		formatted_text = formatted_text:gsub("$dropped_frames", dropped_frames_string);
+		formatted_text = formatted_text:gsub("$dropped_total_frames", dropped_total_frames_string);
+		formatted_text = formatted_text:gsub("$dropped_percents", dropped_percents_string);
+
+		formatted_text = formatted_text:gsub("$congestion", congestion_string);
+		formatted_text = formatted_text:gsub("$average_congestion",average_congestion_string);
+
+		formatted_text = formatted_text:gsub("$average_frame_time", average_frame_time_string);
+		formatted_text = formatted_text:gsub("$memory_usage", memory_usage_string);
+		formatted_text = formatted_text:gsub("$cpu_usage", cpu_usage_string);
+		formatted_text = formatted_text:gsub("$cpu_cores", cpu_cores_string);
+
+		formatted_text = formatted_text:gsub("$bitrate", bitrate_string);
+		formatted_text = formatted_text:gsub("$fps", fps_string);
+
 		local settings = obs.obs_data_create();
 		obs.obs_data_set_string(settings, "text", formatted_text);
 		obs.obs_source_update(source, settings);
@@ -477,16 +495,34 @@ function reset_formatting(properties, property)
 	return true;
 end
 
+function start_cpu_usage_info()
+	if obsffi ~= nil then
+		cpu_info = obsffi.os_cpu_usage_info_start();
+	end
+end
+
+function destroy_cpu_usage_info()
+	if cpu_info ~= nil and obsffi ~= nil then
+		obsffi.os_cpu_usage_info_destroy(cpu_info);
+		cpu_info = nil;
+	end
+end
+
 function on_event(event)
 	if event == obs.OBS_FRONTEND_EVENT_FINISHED_LOADING then
 		print("scene loaded");
+
+
+		print(cpu_cores_string);
 		
 		if is_script_enabled then
 			print("script is enabled");
 			is_timer_on = true;
 			
 			obs.timer_add(obs_stats_tick, timer_delay);
-			
+
+			start_cpu_usage_info();
+
 			if is_bot_enabled then
 				init_socket();
 			end
@@ -580,15 +616,23 @@ function script_update(settings)
 	text_source = obs.obs_data_get_string(settings, "text_source");
 	
 	text_formatting = obs.obs_data_get_string(settings, "text_formatting");
-	
+
+	local physical_cores = obs.os_get_physical_cores();
+	local logical_cores = obs.os_get_logical_cores();
+
+	cpu_cores_string = string.format("%sC/%sT", physical_cores, logical_cores);
+
 	if s == nil or s:match("%S") == nil then
 		channel_nickname = bot_nickname;
 	end
 	
 	if is_obs_stats_timer_on then
 		close_socket();
-		
+
+		destroy_cpu_usage_info();
+
 		is_obs_stats_timer_on = false;
+		obs.timer_remove(obs_stats_tick);
 	end
 
 	local source = obs.obs_get_source_by_name(text_source)
@@ -614,14 +658,16 @@ function script_update(settings)
 		init_socket();
 	end
 	
+	start_cpu_usage_info();
+
 	obs.timer_add(obs_stats_tick, timer_delay);
 end
 
 function script_description()
 	return [[
-<center><h2>OBS Stats on Stream v0.7</h2></center>
+<center><h2>OBS Stats on Stream v0.8</h2></center>
 <center><a href="https://twitch.tv/GreenComfyTea">twitch.tv/GreenComfyTea</a> - 2021</center>
-<center><p>Shows missed frames, skipped frames, dropped frames, congestion, bitrate, fps, memory usage and average frame time on stream as text source and/or in Twitch chat.</p></center>
+<center><p>Shows missed frames, skipped frames, dropped frames, congestion, bitrate, fps, memory usage, cpu core count, cpu usage and average frame time on stream as text source and/or in Twitch chat.</p></center>
 <center><a href="https://twitchapps.com/tmi/">Twitch Chat OAuth Password Generator</a></center>
 <center><a href="https://github.com/GreenComfyTea/OBS-Stats-on-Stream/blob/main/Text-Formatting-Variables.md">Text Formatting Variables</a></center>
 <center><a href="https://github.com/GreenComfyTea/OBS-Stats-on-Stream/blob/main/Bot-Commands.md">Bot commands</a></center>
