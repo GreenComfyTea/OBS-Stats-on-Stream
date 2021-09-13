@@ -232,10 +232,21 @@ end
 
 function receive()
 	local response, err = bot_socket:receive();
+
 	if response then
 		return response;
-	elseif err ~= "timeout" then
-		error(err);
+	elseif err ~= nil then
+		if err == "timeout" then
+			return;
+		--"An established connection was aborted by the software in your host machine."
+		elseif err:match("An established connection was aborted") then
+			print(tostring(err));
+			print("Reconnecting...");
+			close_socket();
+			init_socket();
+		else
+			error(err);
+		end
 	end
 end
 
