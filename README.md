@@ -11,8 +11,8 @@ The script allow to shows missed frames, skipped frames, dropped frames, congest
 </table>
 
 <img src="https://i.imgur.com/Yn0jwYY.png" />
-<img src="https://i.imgur.com/QA2VMT1.png" />
-<img src="https://i.imgur.com/8izp0UJ.png" />
+<img src="https://i.imgur.com/K4eCiyA.png" />
+<img src="https://i.imgur.com/WXGf9c5.png" />
 
 
 # How to use
