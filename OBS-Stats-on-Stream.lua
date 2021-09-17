@@ -512,9 +512,6 @@ function on_event(event)
 	if event == obs.OBS_FRONTEND_EVENT_FINISHED_LOADING then
 		print("scene loaded");
 
-
-		print(cpu_cores_string);
-		
 		if is_script_enabled then
 			print("script is enabled");
 			is_timer_on = true;
@@ -622,7 +619,7 @@ function script_update(settings)
 
 	cpu_cores_string = string.format("%sC/%sT", physical_cores, logical_cores);
 
-	if s == nil or s:match("%S") == nil then
+	if channel_nickname == nil or channel_nickname:match("%S") == nil then
 		channel_nickname = bot_nickname;
 	end
 	
