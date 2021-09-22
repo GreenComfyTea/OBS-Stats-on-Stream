@@ -310,8 +310,7 @@ end
 
 function obs_stats_tick()
 	total_ticks = total_ticks + 1;
-	
-	
+
 	-- Not working for some reason?
 	-- Crashing on config_get_string mutex
 	-- I want to detect output mode automatically.
@@ -396,8 +395,11 @@ function obs_stats_tick()
 		--local connect_time = obs.obs_output_get_connect_time_ms(output)
 		obs.obs_output_release(output);
 	end
-	
-	congestion_cumulative = congestion_cumulative + congestion
+
+	-- Check that congestion is not NaN
+	if(congestion == congestion) then
+		congestion_cumulative = congestion_cumulative + congestion
+	end
 
 	-- Get bitrate
 	local bytes_sent = total_bytes;
