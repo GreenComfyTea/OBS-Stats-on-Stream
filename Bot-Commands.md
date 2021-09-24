@@ -100,8 +100,7 @@
 	FPS: $fps/$target_fps (average: $average_fps),
 	Memory Usage: $memory_usage MB,
 	CPU Usage: $cpu_usage%,
-	Bitrate: $bitrate kb/s,
-
+	Bitrate: $bitrate kb/s
 	```
 	
 	
