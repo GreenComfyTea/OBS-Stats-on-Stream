@@ -1,5 +1,5 @@
 # OBS Stats on Stream
-The script allow to shows missed frames, skipped frames, dropped frames, congestion, bitrate, fps, memory usage,  cpu core count, cpu usage and average frame time on stream as text source and/or in Twitch chat (Custom Bot Supported).
+Shows obs stats on stream and/or in Twitch chat. Supported data: encoder, output mode, canvas resolution, output resolution, missed frames, skipped frames, dropped frames, congestion,  average frame time, fps, memory usage, cpu core count, cpu usage, audio bitrate and video bitrate..
 
 <table style="width:100%">
 <tr><th colspan="2"></th></tr>
@@ -10,9 +10,9 @@ The script allow to shows missed frames, skipped frames, dropped frames, congest
   <tr><th colspan="2"></th></tr>
 </table>
 
-<img src="https://i.imgur.com/Yn0jwYY.png" />
-<img src="https://i.imgur.com/K4eCiyA.png" />
-<img src="https://i.imgur.com/WXGf9c5.png" />
+<img src="https://i.imgur.com/uMnrq4r.png" />
+<img src="https://i.imgur.com/6E7Ku9B.png" />
+<img src="https://i.imgur.com/Wfi0c1u.png" />
 
 
 # How to use
@@ -21,7 +21,6 @@ The script allow to shows missed frames, skipped frames, dropped frames, congest
 3. Open Tools -> Scripts. Add the `OBS-Stats-on-Stream.lua` script (only this one).
 4. Configure the script.
 	* If you don't need Twitch Bot functionality, uncheck `Enable Bot` mark.
-    * `Output Mode` must match the OBS encoder mode. Check it by going `OBS -> Settings -> Output -> Output Mode` (on the very top).
     * `Update Delay` determines how often the data will be updated. 1000 ms means once a second. 100 ms means 10 times a second.
 	* `Bot Delay` determines how often the bot will read chat and write to it.
     
@@ -37,9 +36,6 @@ The script allow to shows missed frames, skipped frames, dropped frames, congest
 >**:pushpin: NOTE:**   If you don't need Twitch Bot functionality, you can use `Enable Bot` checkbox to disable it. You also don't need to type `Bot Nickname`, `Bot OAuth Password` and `Channel Nickname` in that case.
 
 >**:pushpin: NOTE:**   Bot only works on Twitch. I have no knowledge nor intentions to make it work on YT or any other platform.
-
-# TODO
-* Automatic Output Mode?
 
 # Contribution
 

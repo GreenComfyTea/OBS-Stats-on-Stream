@@ -3,12 +3,11 @@ local ffi = require("ffi")
 local socket = require("ljsocket")
 
 ffi.cdef[[
-
 	struct video_output;
 	typedef struct video_output video_t;
 
-	//struct config_data;
-	//typedef struct config_data config_t;
+	struct config_data;
+	typedef struct config_data config_t;
 
 	struct os_cpu_usage_info;
 	typedef struct os_cpu_usage_info os_cpu_usage_info_t;
@@ -17,8 +16,10 @@ ffi.cdef[[
 	uint32_t video_output_get_total_frames(const video_t *video);
 	double video_output_get_frame_rate(const video_t *video);
 
-	//const char *config_get_string(config_t *config, const char *section, const char *name);
-
+	char *config_get_string(config_t *config, const char *section, const char *name);
+	bool config_get_bool(config_t *config, const char *section, const char *name);
+	int config_open(config_t **config, const char *file, enum config_open_type open_type);
+	
 	os_cpu_usage_info_t *os_cpu_usage_info_start(void);
 	double os_cpu_usage_info_query(os_cpu_usage_info_t *info);
 	void os_cpu_usage_info_destroy(os_cpu_usage_info_t *info);
@@ -39,17 +40,23 @@ local channel_nickname = "";
 local text_source = "";
 local text_formatting = "";
 
-local default_text_formatting = [[Missed frames: $missed_frames/$missed_total_frames ($missed_percents%)
-Skipped frames: $skipped_frames/$skipped_total_frames ($skipped_percents%)
-Dropped frames: $dropped_frames/$dropped_total_frames ($dropped_percents%)
+local default_text_formatting = [[
+Missed Frames: $missed_frames/$missed_total_frames ($missed_percents%)
+Skipped Frames: $skipped_frames/$skipped_total_frames ($skipped_percents%)
+Dropped Frames: $dropped_frames/$dropped_total_frames ($dropped_percents%)
 Congestion: $congestion% (avg. $average_congestion%)
-Average frame time: $average_frame_time ms
 Memory Usage: $memory_usage MB
-CPU Cores: $cpu_cores
 CPU Usage: $cpu_usage%
+Frame Time: $average_frame_time ms
+FPS: $fps/$target_fps (avg. $average_fps)
 Bitrate: $bitrate kb/s
-FPS: $fps]];
+]];
 
+local encoder_string = "";
+local output_mode_string = "Simple";
+
+local canvas_resolution_string = "1920x1080?";
+local output_resolution_string = "1280x720?";
 
 local lagged_frames_string = "";
 local lagged_total_frames_string = "";
@@ -65,19 +72,26 @@ local dropped_percents_string = "";
 
 local congestion_string = "";
 local average_congestion_string = "";
-local bitrate_string = "";
 
 local memory_usage_string = "";
 local cpu_usage_string = "";
-
 local cpu_cores_string = "";
 
-local fps_string = "";
 local average_frame_time_string = "";
+local fps_string = "";
+local target_fps_string = "30";
+local average_fps_string = "";
 
-local last_bitrate = 0;
+local audio_bitrate_string = "160";
+local bitrate_string = "";
+local recording_bitrate_string = "";
+
+local bitrate = 0;
 local last_bytes_sent = 0;
-local last_bytes_sent_time = 0;
+local last_bytes_time = 0;
+
+local recording_bitrate = 0;
+local recording_last_bytes_recorded = 0;
 
 local is_script_enabled = true;
 local is_bot_enabled = true;
@@ -85,7 +99,7 @@ local is_timer_on = false;
 
 local total_ticks = 0;
 local congestion_cumulative = 0;
-local bitrate_cumulative = 0;
+local fps_cumulative = 0;
 
 local obsffi;
 if ffi.os == "OSX" then
@@ -96,7 +110,6 @@ else
 end
 
 local cpu_info = nil;
-
 local my_settings = nil;
 
 local host = "irc.chat.twitch.tv";
@@ -172,49 +185,73 @@ function bot_socket_tick()
 						end
 						
 						if i == 4 then
-							if word:match("^@") then
-								to_user = word:sub(2);
-							else
-								to_user = word;
+							if not word:match("󠀀") then
+								if word:match("^@") then
+									to_user = word:sub(2);
+								else
+									to_user = word;
+								end
 							end
 							
 						end
 						
 						i = i + 1;
 					end
+					
 
-					if command:match("^!missed_frames") or command:match("^!missedframes") or command:match("^!missed") then
-						send_message(string.format("@%s -> Missed frames: %s/%s (%s%%)", to_user, lagged_frames_string, lagged_total_frames_string, lagged_percents_string));
+					if command:match("^!encoder") then
+						send_message(string.format("@%s -> Encoder: %s", to_user, encoder_string));
+						
+					elseif command:match("^!output_mode") or command:match("^!outputmode") then
+						send_message(string.format("@%s -> Output Mode: %s", to_user, output_mode_string));
+						
+					elseif command:match("^!canvas_resolution") or command:match("^!canvasresolution") then
+						send_message(string.format("@%s -> Canvas Resolution: %s", to_user, canvas_resolution_string));
+						
+					elseif command:match("^!output_resolution") or command:match("^!outputresolution") then
+						send_message(string.format("@%s -> Output Resolution: %s", to_user, output_resolution_string));
+						
+					elseif command:match("^!missed_frames") or command:match("^!missedframes") or command:match("^!missed") then
+						send_message(string.format("@%s -> Missed Frames: %s/%s (%s%%)", to_user, lagged_frames_string, lagged_total_frames_string, lagged_percents_string));
 						
 					elseif command:match("^!skipped_frames") or command:match("^!skippedframes") or command:match("^!skipped") then
-						send_message(string.format("@%s -> Skipped frames: %s/%s (%s%%)", to_user, skipped_frames_string, skipped_total_frames_string, skipped_percents_string));
+						send_message(string.format("@%s -> Skipped Frames: %s/%s (%s%%)", to_user, skipped_frames_string, skipped_total_frames_string, skipped_percents_string));
 						
 					elseif command:match("^!dropped_frames") or command:match("^!droppedframes") or command:match("^!dropped") then
-						send_message(string.format("@%s -> Dropped frames: %s/%s (%s%%)", to_user, dropped_frames_string, dropped_total_frames_string, dropped_percents_string));
+						send_message(string.format("@%s -> Dropped Frames: %s/%s (%s%%)", to_user, dropped_frames_string, dropped_total_frames_string, dropped_percents_string));
 						
 					elseif command:match("^!congestion") then
 						send_message(string.format("@%s -> Congestion: %s%% (average: %s%%)", to_user, congestion_string, average_congestion_string));
 						
 					elseif command:match("^!frame_time") or command:match("^!render_time") or command:match("^!frametime") or command:match("^!rendertime") then
-						send_message(string.format("@%s -> Average frame time: %s ms", to_user, average_frame_time_string));
+						send_message(string.format("@%s -> Average Frame Time: %s ms", to_user, average_frame_time_string));
+						
+					elseif command:match("^!fps") or command:match("^!framerate") then
+						send_message(string.format("@%s -> FPS: %s/%s (average: %s)", to_user, fps_string, target_fps_string, average_fps_string));
 						
 					elseif command:match("^!memory_usage") or command:match("^!memoryusage") or command:match("^!memory") then
-						send_message(string.format("@%s -> Memory usage: %s MB", to_user, memory_usage_string));
+						send_message(string.format("@%s -> Memory Usage: %s MB", to_user, memory_usage_string));
 						
 					elseif command:match("^!cpu_cores") or command:match("^!cpucores") or command:match("^!cores") then
-						send_message(string.format("@%s -> CPU cores: %s", to_user, cpu_cores_string));
+						send_message(string.format("@%s -> CPU Cores: %s", to_user, cpu_cores_string));
 
 					elseif command:match("^!cpu_usage") or command:match("^!cpuusage") then
-						send_message(string.format("@%s -> CPU usage: %s%%", to_user, cpu_usage_string));
+						send_message(string.format("@%s -> CPU Usage: %s%%", to_user, cpu_usage_string));
+
+					elseif command:match("^!audio_bitrate") or command:match("^!audiobitrate") then
+						send_message(string.format("@%s -> Audio Bitrate: %s kb/s", to_user, audio_bitrate_string));
+
+					elseif command:match("^!recording_bitrate") or command:match("^!recordingbitrate")then
+						send_message(string.format("@%s -> Recording Bitrate: %s kb/s", to_user, recording_bitrate_string));
 
 					elseif command:match("^!bitrate") then
 						send_message(string.format("@%s -> Bitrate: %s kb/s", to_user, bitrate_string));
 						
-					elseif command:match("^!fps") or command:match("^!framerate") then
-						send_message(string.format("@%s -> FPS: %s", to_user, fps_string));
+					elseif command:match("^!obs_static_stats") or command:match("^!obsstaticstats") then
+						send_message(string.format("@%s -> Encoder: %s, Output Mode: %s, Canvas Resolution: %s, Output Resolution: %s, CPU cores: %s, Audio Bitrate: %s kb/s", to_user, encoder_string, output_mode_string, canvas_resolution_string, output_resolution_string, cpu_cores_string, audio_bitrate_string));
 
-					elseif command:match("^!obsstats") then
-						send_message(string.format("@%s -> Missed frames: %s/%s (%s%%), Skipped frames: %s/%s (%s%%), Dropped frames: %s/%s (%s%%), Congestion: %s%% (average: %s%%), Average frame time: %s ms, Memory usage: %s MB, CPU cores: %s, CPU usage: %s%%, Bitrate: %s kb/s, FPS: %s", to_user, lagged_frames_string, lagged_total_frames_string, lagged_percents_string, skipped_frames_string, skipped_total_frames_string, skipped_percents_string, dropped_frames_string, dropped_total_frames_string, dropped_percents_string, congestion_string, average_congestion_string, average_frame_time_string, memory_usage_string, cpu_cores_string, cpu_usage_string, bitrate_string, fps_string));
+					elseif command:match("^!obs_stats") or command:match("^!obsstats") or command:match("^!obs_dynamic_stats") or command:match("^!obsdynamicstats")then
+						send_message(string.format("@%s -> Missed frames: %s/%s (%s%%), Skipped frames: %s/%s (%s%%), Dropped frames: %s/%s (%s%%), Congestion: %s%% (average: %s%%), Average frame time: %s ms, FPS: %s/%s (average: %s), Memory usage: %s MB, CPU usage: %s%%, Bitrate: %s kb/s", to_user, lagged_frames_string, lagged_total_frames_string, lagged_percents_string, skipped_frames_string, skipped_total_frames_string, skipped_percents_string, dropped_frames_string, dropped_total_frames_string, dropped_percents_string, congestion_string, average_congestion_string, average_frame_time_string, fps_string, target_fps_string, average_fps_string, memory_usage_string, cpu_usage_string, bitrate_string));
 					end
 					
 					do break end
@@ -246,7 +283,6 @@ end
 
 function receive()
 	local response, err = bot_socket:receive();
-
 	if response then
 		return response;
 	elseif err ~= nil then
@@ -307,46 +343,8 @@ function reset_bot_data()
 	auth_requested = false;
 end
 
-
 function obs_stats_tick()
 	total_ticks = total_ticks + 1;
-
-	-- Not working for some reason?
-	-- Crashing on config_get_string mutex
-	-- I want to detect output mode automatically.
-	
-	--[[
-	local profile = obs.obs_frontend_get_current_profile();
-	print("profile: " .. profile);
-	
-	local profile_path = "                                                                                                                                                                                                                                                               ";
-	obs.os_get_config_path(profile_path, #profile_path, "obs-studio\\basic\\profiles\\" ..profile .. "\\basic.ini");
-	print("path: " .. profile_path);
-	
-	local config = obs.obs_frontend_get_profile_config();
-	local gconfig = obs.obs_frontend_get_global_config();
-
-	print("config: " .. tostring(config));
-	print("config: " .. tostring(gconfig));
-
-	if obsffi ~= nil then
-		local mode = obsffi.config_get_string(config, "Output", "Mode");
-		--local gmode = obsffi.config_get_string(gconfig, "Output", "Mode");
-
-		print("config: " .. tostring(mode));
-		print("config: " .. tostring(gmode));
-	end
-	--]]
-	
-
-	--local config = nil
-	--local config_open_success = obs.config_open(config, profile_path, 0)
-	--print("success: " .. tostring(config_open_success))
-	
-	--obs.config_close(config)
-	
-	--Not working for some reason?
-	--info_query return nan
 	
 	-- Get CPU usage
 	local cpu_usage = 0.0;
@@ -359,6 +357,7 @@ function obs_stats_tick()
 	
 	-- Get FPS/framerate
 	local fps = obs.obs_get_active_fps();
+	fps_cumulative = fps_cumulative + fps;
 	
 	-- Get average time to render frame
 	local average_frame_time = obs.obs_get_average_frame_time_ns() / 1000000.0;
@@ -385,46 +384,67 @@ function obs_stats_tick()
 	local congestion = 0.0;
 	local total_bytes = 0;
 
-	local output = obs.obs_get_output_by_name(output_mode);
+	local streaming_output = obs.obs_frontend_get_streaming_output();
 	-- output will be nil when not actually streaming
-	if output ~= nil then
-		total_frames = obs.obs_output_get_total_frames(output);
-		dropped_frames = obs.obs_output_get_frames_dropped(output);
-		congestion = obs.obs_output_get_congestion(output);
-		total_bytes = obs.obs_output_get_total_bytes(output);
-		--local connect_time = obs.obs_output_get_connect_time_ms(output)
-		obs.obs_output_release(output);
+	if streaming_output ~= nil then
+		total_frames = obs.obs_output_get_total_frames(streaming_output);
+		dropped_frames = obs.obs_output_get_frames_dropped(streaming_output);
+		congestion = obs.obs_output_get_congestion(streaming_output);
+		total_bytes = obs.obs_output_get_total_bytes(streaming_output);
+		--local connect_time = obs.obs_output_get_connect_time_ms(streaming_output)
+		obs.obs_output_release(streaming_output);
 	end
-
+	
 	-- Check that congestion is not NaN
 	if(congestion == congestion) then
 		congestion_cumulative = congestion_cumulative + congestion
 	end
 
 	-- Get bitrate
-	local bytes_sent = total_bytes;
 	local current_time = obs.os_gettime_ns();
-
-	if bytes_sent < last_bytes_sent then
-		bytes_sent = 0;
-	end
-	if bytes_sent == 0 then
-		last_bytes_sent = 0;
-	end
-		
-	local time_passed = (current_time - last_bytes_sent_time) / 1000000000.0;
-	local bits_between = (bytes_sent - last_bytes_sent) * 8;
-	bitrate = bits_between / time_passed / 1000.0;
-
-
-	local bitrate = last_bitrate;
+	local time_passed = (current_time - last_bytes_time) / 1000000000.0;
+	
 	if time_passed > 2.0 then
+		local bytes_sent = total_bytes;
+		
+		if bytes_sent < last_bytes_sent then
+			bytes_sent = 0;
+		end
+		if bytes_sent == 0 then
+			last_bytes_sent = 0;
+		end
+		
 		local bits_between = (bytes_sent - last_bytes_sent) * 8;
 		bitrate = bits_between / time_passed / 1000.0;
 
 		last_bytes_sent = bytes_sent;
-		last_bytes_sent_time = current_time;
-		last_bitrate = bitrate;
+		last_bytes_time = current_time;
+	end
+	
+	-- Get recording bitrate
+	if obs.obs_frontend_recording_active() then
+		local recording_output = obs.obs_frontend_get_recording_output();
+		local recording_total_bytes = 0;
+		if recording_output ~= nil then
+			recording_total_bytes = obs.obs_output_get_total_bytes(recording_output);
+			obs.obs_output_release(recording_output);
+		end
+		
+		if time_passed > 2.0 then
+			local recording_bytes_recorded = recording_total_bytes;
+			
+			if recording_bytes_recorded < recording_last_bytes_recorded then
+				recording_bytes_recorded = 0;
+			end
+			if recording_bytes_recorded == 0 then
+				recording_last_bytes_recorded = 0;
+			end
+			
+			local recording_bits_between = (recording_bytes_recorded - recording_last_bytes_recorded) * 8;
+			recording_bitrate = recording_bits_between / time_passed / 1000.0;
+
+			recording_last_bytes_recorded = recording_bytes_recorded;
+		end
 	end
 
 	-- Update strings with new values
@@ -444,18 +464,26 @@ function obs_stats_tick()
 	average_congestion_string = string.format("%.2f", 100 * congestion_cumulative / total_ticks);
 	
 	average_frame_time_string = string.format("%.1f", average_frame_time);
+	fps_string = string.format("%.2g", fps);
+	average_fps_string = string.format("%.2g", fps_cumulative / total_ticks);
+	
 	memory_usage_string = string.format("%.1f", memory_usage);
 	cpu_usage_string = string.format("%.1f", cpu_usage);
 
 	bitrate_string = string.format("%.0f", bitrate);
-	fps_string = string.format("%.2g", fps);
+	recording_bitrate_string = string.format("%.0f", recording_bitrate);
 	
-
 	local source = obs.obs_get_source_by_name(text_source);
 	-- Update text source
 	if source ~= nil then
 		-- Make a string for display in a text source
 		local formatted_text = text_formatting;
+
+		formatted_text = formatted_text:gsub("$encoder", encoder_string);
+		formatted_text = formatted_text:gsub("$output_mode", output_mode_string);
+		
+		formatted_text = formatted_text:gsub("$canvas_resolution", canvas_resolution_string);
+		formatted_text = formatted_text:gsub("$output_resolution", output_resolution_string);
 
 		formatted_text = formatted_text:gsub("$missed_frames", lagged_frames_string);
 		formatted_text = formatted_text:gsub("$missed_total_frames", lagged_total_frames_string);
@@ -473,19 +501,114 @@ function obs_stats_tick()
 		formatted_text = formatted_text:gsub("$average_congestion",average_congestion_string);
 
 		formatted_text = formatted_text:gsub("$average_frame_time", average_frame_time_string);
-		formatted_text = formatted_text:gsub("$memory_usage", memory_usage_string);
-		formatted_text = formatted_text:gsub("$cpu_usage", cpu_usage_string);
-		formatted_text = formatted_text:gsub("$cpu_cores", cpu_cores_string);
-
-		formatted_text = formatted_text:gsub("$bitrate", bitrate_string);
 		formatted_text = formatted_text:gsub("$fps", fps_string);
+		formatted_text = formatted_text:gsub("$target_fps", target_fps_string);
+		formatted_text = formatted_text:gsub("$average_fps", average_fps_string);
+		
+		formatted_text = formatted_text:gsub("$memory_usage", memory_usage_string);
+		formatted_text = formatted_text:gsub("$cpu_cores", cpu_cores_string);
+		formatted_text = formatted_text:gsub("$cpu_usage", cpu_usage_string);
 
+		formatted_text = formatted_text:gsub("$audio_bitrate", audio_bitrate_string);
+		formatted_text = formatted_text:gsub("$recording_bitrate", recording_bitrate_string);
+		formatted_text = formatted_text:gsub("$bitrate", bitrate_string);
+		
 		local settings = obs.obs_data_create();
 		obs.obs_data_set_string(settings, "text", formatted_text);
 		obs.obs_source_update(source, settings);
 		obs.obs_source_release(source);
 		obs.obs_data_release(settings);
 	end
+end
+
+function read_profile_config()
+	local profile = obs.obs_frontend_get_current_profile();
+	
+	-- char dst[512]l
+	local profile_path = "                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                ";
+	local length = obs.os_get_config_path(profile_path, #profile_path, "obs-studio\\basic\\profiles\\" ..profile .. "\\basic.ini");
+	
+	if length <= 0 then
+		return;
+	end
+	
+	local config_text = obs.os_quick_read_utf8_file(profile_path);
+	
+	local config = parse_ini(config_text);
+	
+	if config.Video ~= nil then
+		if config.Video.BaseCX ~= nil and config.Video.BaseCY ~= nil then
+			canvas_resolution_string = string.format("%sx%s", config.Video.BaseCX, config.Video.BaseCY);
+		end 
+		
+		if config.Video.OutputCX ~= nil and config.Video.OutputCY ~= nil then
+			output_resolution_string = string.format("%sx%s", config.Video.OutputCX, config.Video.OutputCY);
+		end 
+	
+		if config.Video.FPSCommon ~= nil then
+			target_fps_string = config.Video.FPSCommon;
+		end 
+	end
+
+	if config.Output ~= nil then
+		if config.Output.Mode ~= nil then
+			output_mode_string = config.Output.Mode;
+			if config.Output.Mode == "Simple" then
+				output_mode = "simple_stream";
+			else
+				output_mode = "adv_stream";
+			end
+		end
+	end
+
+	if output_mode == "simple_stream" then
+		if config.SimpleOutput ~= nil then
+			if config.SimpleOutput.StreamEncoder ~= nil then
+				encoder_string_string = config.SimpleOutput.StreamEncoder;
+			end
+			
+			if config.SimpleOutput.ABitrate ~= nil then
+				audio_bitrate_string = config.SimpleOutput.ABitrate;
+			end
+		end
+	else
+		if config.AdvOut ~= nil then
+			if config.AdvOut.Encoder ~= nil then
+				encoder_string = config.AdvOut.Encoder;
+			end
+			
+			if config.AdvOut.Track1Bitrate ~= nil then
+				audio_bitrate_string = config.AdvOut.Track1Bitrate;
+			end
+		end
+	end
+end
+
+function parse_ini(ini_text)
+	local data = {};
+	local section;
+	for line in ini_text:gmatch("[^\r\n]+") do
+		local tempSection = line:match('^%[([^%[%]]+)%]$');
+		if(tempSection) then
+			section = tonumber(tempSection) and tonumber(tempSection) or tempSection;
+			data[section] = data[section] or {};
+		end
+		local param, value = line:match('^([%w|_]+)%s-=%s-(.+)$');
+		if(param and value ~= nil) then
+			if(tonumber(value)) then
+				value = tonumber(value);
+			elseif(value == 'true') then
+				value = true;
+			elseif(value == 'false') then
+				value = false;
+			end
+			if(tonumber(param)) then
+				param = tonumber(param);
+			end
+			data[section][param] = value;
+		end
+	end
+	return data;
 end
 
 function reset_formatting(properties, property)
@@ -526,6 +649,8 @@ function on_event(event)
 				init_socket();
 			end
 		end
+	elseif event == obs.OBS_FRONTEND_EVENT_STREAMING_STARTING or event == obs.OBS_FRONTEND_EVENT_STREAMING_STOPPING or event == obs.OBS_FRONTEND_EVENT_RECORDING_STARTING or event == obs.OBS_FRONTEND_EVENT_RECORDING_STOPPING then
+		read_profile_config();
 	end
 end
 		
@@ -534,11 +659,6 @@ function script_properties()
 
 	local enable_script_property = obs.obs_properties_add_bool(properties, "is_script_enabled", "Enable Script");
 	local enable_bot_property = obs.obs_properties_add_bool(properties, "is_bot_enabled", "Enable Bot");
-	
-	local output_mode_property = obs.obs_properties_add_list(properties, "output_mode", "Output Mode", obs.OBS_COMBO_TYPE_LIST, obs.OBS_COMBO_FORMAT_STRING);
-	obs.obs_property_list_add_string(output_mode_property, "Simple", "simple_stream");
-	obs.obs_property_list_add_string(output_mode_property, "Advanced", "adv_stream");
-	obs.obs_property_set_long_description(output_mode_property, "Must match the output mode you are using in OBS -> Settings -> Output -> Output mode.");
 	
 	local timer_delay_property = obs.obs_properties_add_int(properties, "timer_delay", "Update Delay (ms)", 100, 2000, 100);
 	obs.obs_property_set_long_description(timer_delay_property, "Determines how often the data will update.");
@@ -583,7 +703,6 @@ end
 function script_defaults(settings)
 	obs.obs_data_set_default_bool(settings, "is_script_enabled", true);
 	obs.obs_data_set_default_bool(settings, "is_bot_enabled", true);
-	obs.obs_data_set_default_string(settings, "output_mode", "simple_stream");
 	
 	obs.obs_data_set_default_int(settings, "timer_delay", 1000);
 	obs.obs_data_set_default_int(settings, "bot_delay", 2000);
@@ -602,7 +721,6 @@ function script_update(settings)
 
 	is_script_enabled = obs.obs_data_get_bool(settings, "is_script_enabled");
 	is_bot_enabled = obs.obs_data_get_bool(settings, "is_bot_enabled");
-	output_mode = obs.obs_data_get_string(settings, "output_mode");
 	
 	timer_delay = obs.obs_data_get_int(settings, "timer_delay");
 	bot_delay = obs.obs_data_get_int(settings, "bot_delay");
@@ -620,6 +738,8 @@ function script_update(settings)
 	local logical_cores = obs.os_get_logical_cores();
 
 	cpu_cores_string = string.format("%sC/%sT", physical_cores, logical_cores);
+
+	read_profile_config();
 
 	if channel_nickname == nil or channel_nickname:match("%S") == nil then
 		channel_nickname = bot_nickname;
@@ -664,9 +784,9 @@ end
 
 function script_description()
 	return [[
-<center><h2>OBS Stats on Stream v0.82</h2></center>
+<center><h2>OBS Stats on Stream v0.9</h2></center>
 <center><a href="https://twitch.tv/GreenComfyTea">twitch.tv/GreenComfyTea</a> - 2021</center>
-<center><p>Shows missed frames, skipped frames, dropped frames, congestion, bitrate, fps, memory usage, cpu core count, cpu usage and average frame time on stream as text source and/or in Twitch chat.</p></center>
+<center><p>Shows obs stats on stream and/or in Twitch chat. Supported data: encoder, output mode, canvas resolution, output resolution, missed frames, skipped frames, dropped frames, congestion,  average frame time, fps, memory usage, cpu core count, cpu usage, audio bitrate, recording bitrate and streaming bitrate.</p></center>
 <center><a href="https://twitchapps.com/tmi/">Twitch Chat OAuth Password Generator</a></center>
 <center><a href="https://github.com/GreenComfyTea/OBS-Stats-on-Stream/blob/main/Text-Formatting-Variables.md">Text Formatting Variables</a></center>
 <center><a href="https://github.com/GreenComfyTea/OBS-Stats-on-Stream/blob/main/Bot-Commands.md">Bot commands</a></center>
