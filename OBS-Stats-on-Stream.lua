@@ -52,7 +52,7 @@ FPS: $fps/$target_fps (avg. $average_fps)
 Bitrate: $bitrate kb/s
 ]];
 
-local encoder_string = "";
+local encoder_string = "x264?";
 local output_mode_string = "Simple";
 
 local canvas_resolution_string = "1920x1080?";
