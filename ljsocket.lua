@@ -415,7 +415,7 @@ do
             return true
         end
 
-        return nil, socket.lasterror(ret)
+		return nil, socket.lasterror(ret)
     end
 
     function socket.getnameinfo(address, length, host, hostlen, serv, servlen, flags)
@@ -688,7 +688,7 @@ do
 
     errno = {
         EAGAIN = 11,
-        EWOULDBLOCK = errno.EAGAIN,
+        EWOULDBLOCK = 11, -- is errno.EAGAIN
         ENOTSOCK = 88,
         ECONNRESET = 104,
         EINPROGRESS = 115,
