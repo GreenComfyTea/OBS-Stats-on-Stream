@@ -6,19 +6,12 @@ ffi.cdef[[
 	struct video_output;
 	typedef struct video_output video_t;
 
-	struct config_data;
-	typedef struct config_data config_t;
-
 	struct os_cpu_usage_info;
 	typedef struct os_cpu_usage_info os_cpu_usage_info_t;
 
 	uint32_t video_output_get_skipped_frames(const video_t *video);
 	uint32_t video_output_get_total_frames(const video_t *video);
 	double video_output_get_frame_rate(const video_t *video);
-
-	char *config_get_string(config_t *config, const char *section, const char *name);
-	bool config_get_bool(config_t *config, const char *section, const char *name);
-	int config_open(config_t **config, const char *file, enum config_open_type open_type);
 	
 	os_cpu_usage_info_t *os_cpu_usage_info_start(void);
 	double os_cpu_usage_info_query(os_cpu_usage_info_t *info);
@@ -331,7 +324,8 @@ end
 function close_socket()					
 	obs.timer_remove(bot_socket_tick);
 
-	if bot_socket:is_connected() then
+
+	if bot_socket ~= nil and bot_socket:is_connected() then
 		bot_socket:close();
 	end
 	
@@ -524,7 +518,7 @@ end
 function read_profile_config()
 	local profile = obs.obs_frontend_get_current_profile();
 	
-	-- char dst[512]l
+	-- char dst[512];
 	local profile_path = "                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                ";
 	local length = obs.os_get_config_path(profile_path, #profile_path, "obs-studio\\basic\\profiles\\" ..profile .. "\\basic.ini");
 	
