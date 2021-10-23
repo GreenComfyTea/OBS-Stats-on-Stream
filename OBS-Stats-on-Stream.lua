@@ -46,7 +46,7 @@ Bitrate: $bitrate kb/s
 ]];
 
 local encoder_string = "x264?";
-local output_mode_string = "Simple";
+local output_mode_string = "Simple?";
 
 local canvas_resolution_string = "1920x1080?";
 local output_resolution_string = "1280x720?";
@@ -72,10 +72,10 @@ local cpu_cores_string = "";
 
 local average_frame_time_string = "";
 local fps_string = "";
-local target_fps_string = "30";
+local target_fps_string = "30?";
 local average_fps_string = "";
 
-local audio_bitrate_string = "160";
+local audio_bitrate_string = "160?";
 local bitrate_string = "";
 local recording_bitrate_string = "";
 
@@ -190,7 +190,6 @@ function bot_socket_tick()
 						
 						i = i + 1;
 					end
-					
 
 					if command:match("^!encoder") then
 						send_message(string.format("@%s -> Encoder: %s", to_user, encoder_string));
@@ -518,15 +517,29 @@ end
 function read_profile_config()
 	local profile = obs.obs_frontend_get_current_profile();
 	
+	local profile_relative_path = "obs-studio\\basic\\profiles\\" .. profile .. "\\basic.ini";
+	
 	-- char dst[512];
 	local profile_path = "                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                ";
-	local length = obs.os_get_config_path(profile_path, #profile_path, "obs-studio\\basic\\profiles\\" ..profile .. "\\basic.ini");
+	obs.os_get_abs_path("..\\..\\config\\" .. profile_relative_path, profile_path, #profile_path);
 	
-	if length <= 0 then
+	if not obs.os_file_exists(profile_path) then	
+		obs.os_get_config_path(profile_path, #profile_path, profile_relative_path);
+	
+		if not obs.os_file_exists(profile_path) then	
+			print("Config file not found.");
+			return;
+		end
+	end
+
+	local config_text = obs.os_quick_read_utf8_file(profile_path);
+
+	if(config_text == nil) then 
+		print("Couldn't read config file.");
 		return;
 	end
 	
-	local config_text = obs.os_quick_read_utf8_file(profile_path);
+	print("Config loaded: " ..  profile_path);
 	
 	local config = parse_ini(config_text);
 	
@@ -778,7 +791,7 @@ end
 
 function script_description()
 	return [[
-<center><h2>OBS Stats on Stream v0.9</h2></center>
+<center><h2>OBS Stats on Stream v1.0</h2></center>
 <center><a href="https://twitch.tv/GreenComfyTea">twitch.tv/GreenComfyTea</a> - 2021</center>
 <center><p>Shows obs stats on stream and/or in Twitch chat. Supported data: encoder, output mode, canvas resolution, output resolution, missed frames, skipped frames, dropped frames, congestion,  average frame time, fps, memory usage, cpu core count, cpu usage, audio bitrate, recording bitrate and streaming bitrate.</p></center>
 <center><a href="https://twitchapps.com/tmi/">Twitch Chat OAuth Password Generator</a></center>
