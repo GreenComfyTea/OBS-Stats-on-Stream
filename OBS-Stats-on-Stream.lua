@@ -515,7 +515,7 @@ function obs_stats_tick()
 end
 
 function read_profile_config()
-	local profile = obs.obs_frontend_get_current_profile();
+	local profile = obs.obs_frontend_get_current_profile():gsub("[^%w_ ]", ""):gsub("%s", "_");
 	
 	local profile_relative_path = "obs-studio\\basic\\profiles\\" .. profile .. "\\basic.ini";
 	
