@@ -79,6 +79,9 @@ local audio_bitrate_string = "160?";
 local bitrate_string = "";
 local recording_bitrate_string = "";
 
+local streaming_duration_string = "";
+local recording_duration_string = "";
+
 local bitrate = 0;
 local last_bytes_sent = 0;
 local last_bytes_time = 0;
@@ -372,19 +375,25 @@ function obs_stats_tick()
 	end
 	
 	-- Get dropped frames, congestion and total bytes
-	local total_frames = 0;
 	local dropped_frames = 0;
 	local congestion = 0.0;
 	local total_bytes = 0;
+	local total_frames = 0;
+
+	local streaming_duration_total_seconds = 0;
 
 	local streaming_output = obs.obs_frontend_get_streaming_output();
 	-- output will be nil when not actually streaming
 	if streaming_output ~= nil then
-		total_frames = obs.obs_output_get_total_frames(streaming_output);
 		dropped_frames = obs.obs_output_get_frames_dropped(streaming_output);
 		congestion = obs.obs_output_get_congestion(streaming_output);
 		total_bytes = obs.obs_output_get_total_bytes(streaming_output);
 		--local connect_time = obs.obs_output_get_connect_time_ms(streaming_output)
+
+		-- Get streaming duration
+		total_frames = obs.obs_output_get_total_frames(streaming_output);
+		streaming_duration_total_seconds =  total_frames / fps;
+
 		obs.obs_output_release(streaming_output);
 	end
 	
@@ -414,12 +423,20 @@ function obs_stats_tick()
 		last_bytes_time = current_time;
 	end
 	
+	local recording_duration_total_seconds = 0;
+
 	-- Get recording bitrate
 	if obs.obs_frontend_recording_active() then
 		local recording_output = obs.obs_frontend_get_recording_output();
 		local recording_total_bytes = 0;
+
 		if recording_output ~= nil then
 			recording_total_bytes = obs.obs_output_get_total_bytes(recording_output);
+
+			-- Get recording duration
+			local recording_total_frames = obs.obs_output_get_total_frames(recording_output);
+			recording_duration_total_seconds = recording_total_frames / fps;
+
 			obs.obs_output_release(recording_output);
 		end
 		
@@ -465,7 +482,43 @@ function obs_stats_tick()
 
 	bitrate_string = string.format("%.0f", bitrate);
 	recording_bitrate_string = string.format("%.0f", recording_bitrate);
-	
+
+	-- Time formating
+	local streaming_hours = string.format("%d", math.floor(streaming_duration_total_seconds / 3600));
+	local streaming_minutes = string.format("%d", math.floor((streaming_duration_total_seconds % 3600) / 60));
+	local streaming_seconds = string.format("%d", math.floor(0.5 + streaming_duration_total_seconds % 60));
+
+	if string.len(streaming_hours) <= 1 then
+		streaming_hours = "0" .. streaming_hours;
+	end
+
+	if string.len(streaming_minutes) <= 1 then
+		streaming_minutes = "0" .. streaming_minutes;
+	end
+
+	if string.len(streaming_seconds) <= 1 then
+		streaming_seconds = "0" .. streaming_seconds;
+	end
+
+	local recording_hours = string.format("%d", math.floor(recording_duration_total_seconds / 3600));
+	local recording_minutes = string.format("%d", math.floor((recording_duration_total_seconds % 3600) / 60));
+	local recording_seconds = string.format("%d", math.floor(0.5 + recording_duration_total_seconds % 60));
+
+	if string.len(recording_hours) <= 1 then
+		recording_hours = "0" .. recording_hours;
+	end
+
+	if string.len(recording_minutes) <= 1 then
+		recording_minutes = "0" .. recording_minutes;
+	end
+
+	if string.len(recording_seconds) <= 1 then
+		recording_seconds = "0" .. recording_seconds;
+	end
+
+	streaming_duration_string = string.format("%s:%s:%s", streaming_hours, streaming_minutes, streaming_seconds);
+	recording_duration_string = string.format("%s:%s:%s", recording_hours, recording_minutes, recording_seconds);
+
 	local source = obs.obs_get_source_by_name(text_source);
 	-- Update text source
 	if source ~= nil then
@@ -505,6 +558,9 @@ function obs_stats_tick()
 		formatted_text = formatted_text:gsub("$audio_bitrate", audio_bitrate_string);
 		formatted_text = formatted_text:gsub("$recording_bitrate", recording_bitrate_string);
 		formatted_text = formatted_text:gsub("$bitrate", bitrate_string);
+
+		formatted_text = formatted_text:gsub("$streaming_duration", streaming_duration_string);
+		formatted_text = formatted_text:gsub("$recording_duration", recording_duration_string);
 		
 		local settings = obs.obs_data_create();
 		obs.obs_data_set_string(settings, "text", formatted_text);
@@ -791,9 +847,9 @@ end
 
 function script_description()
 	return [[
-<center><h2>OBS Stats on Stream v1.0</h2></center>
+<center><h2>OBS Stats on Stream v1.1</h2></center>
 <center><a href="https://twitch.tv/GreenComfyTea">twitch.tv/GreenComfyTea</a> - 2021</center>
-<center><p>Shows obs stats on stream and/or in Twitch chat. Supported data: encoder, output mode, canvas resolution, output resolution, missed frames, skipped frames, dropped frames, congestion,  average frame time, fps, memory usage, cpu core count, cpu usage, audio bitrate, recording bitrate and streaming bitrate.</p></center>
+<center><p>Shows obs stats on stream and/or in Twitch chat. Supported data: encoder, output mode, canvas resolution, output resolution, missed frames, skipped frames, dropped frames, congestion,  average frame time, fps, memory usage, cpu core count, cpu usage, recording and streaming duration, audio bitrate, recording bitrate and streaming bitrate.</p></center>
 <center><a href="https://twitchapps.com/tmi/">Twitch Chat OAuth Password Generator</a></center>
 <center><a href="https://github.com/GreenComfyTea/OBS-Stats-on-Stream/blob/main/Text-Formatting-Variables.md">Text Formatting Variables</a></center>
 <center><a href="https://github.com/GreenComfyTea/OBS-Stats-on-Stream/blob/main/Bot-Commands.md">Bot commands</a></center>

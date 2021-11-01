@@ -25,3 +25,5 @@
 23. `$audio_bitrate`
 24. `$recording_bitrate`
 25. `$bitrate`
+24. `$recording_duration`
+25. `$streaming_duration`
