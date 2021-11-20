@@ -1,5 +1,5 @@
 # OBS Stats on Stream
-Shows obs stats on stream and/or in Twitch chat. Supported data: encoder, output mode, canvas resolution, output resolution, missed frames, skipped frames, dropped frames, congestion,  average frame time, fps, memory usage, cpu core count, cpu usage, recording duration, streaming duration, audio bitrate and video bitrate.
+Shows obs stats on stream and/or in Twitch chat. Supported data: encoder, output mode, canvas resolution, output resolution, missed frames, skipped frames, dropped frames, congestion,  average frame time, fps, memory usage, cpu core count, cpu usage, audio bitrate, video bitrate, streaming duration, recording duration, streaming status and recording status.
 
 <table style="width:100%">
 <tr><th colspan="2"></th></tr>
