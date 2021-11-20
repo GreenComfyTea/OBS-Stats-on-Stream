@@ -79,7 +79,44 @@
 	```
 	@to_user -> Bitrate: $bitrate kb/s
 	```
-17. `!obs_static_stats [to_user]`  (aliases: `!obsstaticstats`)
+17. `!recording_bitrate [to_user]` (aliases: `!recordingbitrate`)
+
+	```
+	@to_user -> Recording Bitrate: $recording_bitrate kb/s
+	```
+18. `!streaming_duration [to_user]` (aliases: `!streamingduration`)
+
+	```
+	@to_user -> Streaming duration: 03:32:59
+	```
+19. `!recording_duration [to_user]` (aliases: `!recordingduration`)
+
+	```
+	@to_user -> Recording duration: 03:32:59
+	```
+20. `!streaming_status [to_user]` (aliases: `!streamingstatus`)
+
+	```
+	@to_user -> Streaming status: Live
+	```
+	```
+	@to_user -> Streaming status: Reconnecting
+	```
+	```
+	@to_user -> Streaming status: Offline
+	```
+21. `!recording_status [to_user]`  (aliases: `!recordingstatus`)
+
+	```
+	@to_user -> Recording status: On
+	```
+	```
+	@to_user -> Recording status: Paused
+	```
+	```
+	@to_user -> Recording status: Off
+	```
+22. `!obs_static_stats [to_user]`  (aliases: `!obsstaticstats`)
 
 	```
 	@to_user -> Encoder: $encoder,
@@ -89,7 +126,7 @@
 	CPU cores: $cpu_cores,
 	Audio Bitrate: $audio_bitrate kb/s
 	```
-18. `!obsstats [to_user]`
+23. `!obsstats [to_user]`
 
 	```
 	@to_user -> Missed frames: $missed_frames/$missed_total_frames ($missed_percents%),

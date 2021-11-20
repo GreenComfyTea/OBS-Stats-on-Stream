@@ -79,8 +79,11 @@ local audio_bitrate_string = "160?";
 local bitrate_string = "";
 local recording_bitrate_string = "";
 
-local streaming_duration_string = "";
-local recording_duration_string = "";
+local streaming_duration_string = "00:00:00";
+local recording_duration_string = "00:00:00";
+
+local streaming_status_string = "Offline";
+local recording_status_string = "Off";
 
 local bitrate = 0;
 local last_bytes_sent = 0;
@@ -96,6 +99,8 @@ local is_timer_on = false;
 local total_ticks = 0;
 local congestion_cumulative = 0;
 local fps_cumulative = 0;
+
+local is_live = false;
 
 local obsffi;
 if ffi.os == "OSX" then
@@ -236,11 +241,23 @@ function bot_socket_tick()
 					elseif command:match("^!audio_bitrate") or command:match("^!audiobitrate") then
 						send_message(string.format("@%s -> Audio Bitrate: %s kb/s", to_user, audio_bitrate_string));
 
+					elseif command:match("^!bitrate") then
+						send_message(string.format("@%s -> Bitrate: %s kb/s", to_user, bitrate_string));
+
 					elseif command:match("^!recording_bitrate") or command:match("^!recordingbitrate")then
 						send_message(string.format("@%s -> Recording Bitrate: %s kb/s", to_user, recording_bitrate_string));
 
-					elseif command:match("^!bitrate") then
-						send_message(string.format("@%s -> Bitrate: %s kb/s", to_user, bitrate_string));
+					elseif command:match("^!streaming_duration") or command:match("^!streamingduration") then
+						send_message(string.format("@%s -> Streaming duration: %s", to_user, streaming_duration_string));
+					
+					elseif command:match("^!recording_duration") or command:match("^!recordingduration") then
+						send_message(string.format("@%s -> Recording duration: %s", to_user, recording_duration_string));
+
+					elseif command:match("^!streaming_status") or command:match("^!streamingstatus") then
+						send_message(string.format("@%s -> Streaming status: %s", to_user, streaming_status_string));
+
+					elseif command:match("^!recording_status") or command:match("^!recordingstatus") then
+						send_message(string.format("@%s -> Recording status: %s", to_user, recording_status_string));
 						
 					elseif command:match("^!obs_static_stats") or command:match("^!obsstaticstats") then
 						send_message(string.format("@%s -> Encoder: %s, Output Mode: %s, Canvas Resolution: %s, Output Resolution: %s, CPU cores: %s, Audio Bitrate: %s kb/s", to_user, encoder_string, output_mode_string, canvas_resolution_string, output_resolution_string, cpu_cores_string, audio_bitrate_string));
@@ -380,6 +397,12 @@ function obs_stats_tick()
 	local total_bytes = 0;
 	local total_frames = 0;
 
+	-- local streaming_status = is_live ? "Live" : "Offline";
+	local streaming_status = "Offline";
+	if is_live then 
+		streaming_status = "Live";
+	end
+
 	local streaming_duration_total_seconds = 0;
 
 	local streaming_output = obs.obs_frontend_get_streaming_output();
@@ -389,6 +412,12 @@ function obs_stats_tick()
 		congestion = obs.obs_output_get_congestion(streaming_output);
 		total_bytes = obs.obs_output_get_total_bytes(streaming_output);
 		--local connect_time = obs.obs_output_get_connect_time_ms(streaming_output)
+		
+		-- Streaming status
+		local is_reconnecting = obs.obs_output_reconnecting(streaming_output);
+		if is_reconnecting then
+			streaming_status = "Reconnecting";
+		end
 
 		-- Get streaming duration
 		total_frames = obs.obs_output_get_total_frames(streaming_output);
@@ -483,41 +512,52 @@ function obs_stats_tick()
 	bitrate_string = string.format("%.0f", bitrate);
 	recording_bitrate_string = string.format("%.0f", recording_bitrate);
 
+	streaming_status_string = string.format("%s", streaming_status);
+
 	-- Time formating
-	local streaming_hours = string.format("%d", math.floor(streaming_duration_total_seconds / 3600));
-	local streaming_minutes = string.format("%d", math.floor((streaming_duration_total_seconds % 3600) / 60));
-	local streaming_seconds = string.format("%d", math.floor(0.5 + streaming_duration_total_seconds % 60));
+	if is_live then
+		local streaming_hours = string.format("%d", math.floor(streaming_duration_total_seconds / 3600));
+		local streaming_minutes = string.format("%d", math.floor((streaming_duration_total_seconds % 3600) / 60));
+		local streaming_seconds = string.format("%d", math.floor(0.5 + streaming_duration_total_seconds % 60));
+	
+		if string.len(streaming_hours) <= 1 then
+			streaming_hours = "0" .. streaming_hours;
+		end
+	
+		if string.len(streaming_minutes) <= 1 then
+			streaming_minutes = "0" .. streaming_minutes;
+		end
+	
+		if string.len(streaming_seconds) <= 1 then
+			streaming_seconds = "0" .. streaming_seconds;
+		end
 
-	if string.len(streaming_hours) <= 1 then
-		streaming_hours = "0" .. streaming_hours;
+		streaming_duration_string = string.format("%s:%s:%s", streaming_hours, streaming_minutes, streaming_seconds);
+	else
+		streaming_duration_string = "00:00:00";
 	end
 
-	if string.len(streaming_minutes) <= 1 then
-		streaming_minutes = "0" .. streaming_minutes;
+	if recording_status_string ~= "Off" then
+		local recording_hours = string.format("%d", math.floor(recording_duration_total_seconds / 3600));
+		local recording_minutes = string.format("%d", math.floor((recording_duration_total_seconds % 3600) / 60));
+		local recording_seconds = string.format("%d", math.floor(0.5 + recording_duration_total_seconds % 60));
+
+		if string.len(recording_hours) <= 1 then
+			recording_hours = "0" .. recording_hours;
+		end
+
+		if string.len(recording_minutes) <= 1 then
+			recording_minutes = "0" .. recording_minutes;
+		end
+
+		if string.len(recording_seconds) <= 1 then
+			recording_seconds = "0" .. recording_seconds;
+		end
+
+		recording_duration_string = string.format("%s:%s:%s", recording_hours, recording_minutes, recording_seconds);
+	else
+		recording_duration_string = "00:00:00";
 	end
-
-	if string.len(streaming_seconds) <= 1 then
-		streaming_seconds = "0" .. streaming_seconds;
-	end
-
-	local recording_hours = string.format("%d", math.floor(recording_duration_total_seconds / 3600));
-	local recording_minutes = string.format("%d", math.floor((recording_duration_total_seconds % 3600) / 60));
-	local recording_seconds = string.format("%d", math.floor(0.5 + recording_duration_total_seconds % 60));
-
-	if string.len(recording_hours) <= 1 then
-		recording_hours = "0" .. recording_hours;
-	end
-
-	if string.len(recording_minutes) <= 1 then
-		recording_minutes = "0" .. recording_minutes;
-	end
-
-	if string.len(recording_seconds) <= 1 then
-		recording_seconds = "0" .. recording_seconds;
-	end
-
-	streaming_duration_string = string.format("%s:%s:%s", streaming_hours, streaming_minutes, streaming_seconds);
-	recording_duration_string = string.format("%s:%s:%s", recording_hours, recording_minutes, recording_seconds);
 
 	local source = obs.obs_get_source_by_name(text_source);
 	-- Update text source
@@ -561,7 +601,10 @@ function obs_stats_tick()
 
 		formatted_text = formatted_text:gsub("$streaming_duration", streaming_duration_string);
 		formatted_text = formatted_text:gsub("$recording_duration", recording_duration_string);
-		
+
+		formatted_text = formatted_text:gsub("$streaming_status", streaming_status_string);
+		formatted_text = formatted_text:gsub("$recording_status", recording_status_string);
+
 		local settings = obs.obs_data_create();
 		obs.obs_data_set_string(settings, "text", formatted_text);
 		obs.obs_source_update(source, settings);
@@ -712,7 +755,22 @@ function on_event(event)
 				init_socket();
 			end
 		end
-	elseif event == obs.OBS_FRONTEND_EVENT_STREAMING_STARTING or event == obs.OBS_FRONTEND_EVENT_STREAMING_STOPPING or event == obs.OBS_FRONTEND_EVENT_RECORDING_STARTING or event == obs.OBS_FRONTEND_EVENT_RECORDING_STOPPING then
+	elseif event == obs.OBS_FRONTEND_EVENT_STREAMING_STARTED then
+		is_live = true;
+	elseif event == obs.OBS_FRONTEND_EVENT_STREAMING_STOPPED then
+		is_live = false;
+	elseif event == obs.OBS_FRONTEND_EVENT_RECORDING_STARTED then
+		recording_status_string = "On";
+	elseif event == obs.OBS_FRONTEND_EVENT_RECORDING_STOPPED then
+		recording_status_string = "Off";
+	elseif event == obs.OBS_FRONTEND_EVENT_RECORDING_PAUSED then
+		recording_status_string = "Paused";
+	elseif event == obs.OBS_FRONTEND_EVENT_RECORDING_UNPAUSED then
+		recording_status_string = "On";
+	elseif event == obs.OBS_FRONTEND_EVENT_STREAMING_STARTING or 
+		event == obs.OBS_FRONTEND_EVENT_STREAMING_STOPPING or 
+		event == obs.OBS_FRONTEND_EVENT_RECORDING_STARTING or 
+		event == obs.OBS_FRONTEND_EVENT_RECORDING_STOPPING then
 		read_profile_config();
 	end
 end
@@ -847,7 +905,7 @@ end
 
 function script_description()
 	return [[
-<center><h2>OBS Stats on Stream v1.1</h2></center>
+<center><h2>OBS Stats on Stream v1.2</h2></center>
 <center><a href="https://twitch.tv/GreenComfyTea">twitch.tv/GreenComfyTea</a> - 2021</center>
 <center><p>Shows obs stats on stream and/or in Twitch chat. Supported data: encoder, output mode, canvas resolution, output resolution, missed frames, skipped frames, dropped frames, congestion,  average frame time, fps, memory usage, cpu core count, cpu usage, recording and streaming duration, audio bitrate, recording bitrate and streaming bitrate.</p></center>
 <center><a href="https://twitchapps.com/tmi/">Twitch Chat OAuth Password Generator</a></center>
