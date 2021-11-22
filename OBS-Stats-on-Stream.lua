@@ -33,6 +33,14 @@ local channel_nickname = "";
 local text_source = "";
 local text_formatting = "";
 
+local is_script_enabled = true;
+local is_bot_enabled = true;
+local is_output_to_file_enabled = false;
+local is_debug_mode_enabled = false;
+
+local file_output_name = "obs-stats.json";
+local log_file_name = "obs-stats_" .. os.date("%d.%m.%Y") .. ".log";
+
 local default_text_formatting = [[
 Missed Frames: $missed_frames/$missed_total_frames ($missed_percents%)
 Skipped Frames: $skipped_frames/$skipped_total_frames ($skipped_percents%)
@@ -43,6 +51,54 @@ CPU Usage: $cpu_usage%
 Frame Time: $average_frame_time ms
 FPS: $fps/$target_fps (avg. $average_fps)
 Bitrate: $bitrate kb/s
+]];
+
+local file_output_formatting = [[
+{
+	"encoder": "$encoder",
+	"output_mode": "$output_mode",
+	
+	"canvas_resolution": "$canvas_resolution",
+	"output_resolution": "$output_resolution",
+
+	"missed_frames": $missed_frames,
+	"missed_total_frames": $missed_total_frames,
+	"missed_percents": $missed_percents,
+
+	"skipped_frames": $skipped_frames,
+	"skipped_total_frames": $skipped_total_frames,
+	"skipped_percents": $skipped_percents,
+
+	"dropped_frames": $dropped_frames,
+	"dropped_total_frames": $dropped_total_frames,
+	"dropped_percents": $dropped_percents,
+
+	"congestion": $congestion,
+	"average_congestion": $average_congestion,
+
+	"average_frame_time": $average_frame_time,
+	"fps": $fps,
+	"target_fps": $target_fps,
+	"average_fps": $average_fps,
+	
+	"memory_usage": $memory_usage,
+	"cpu_cores": "$cpu_cores",
+	"cpu_usage": $cpu_usage,
+
+	"audio_bitrate": $audio_bitrate,
+	"recording_bitrate": $recording_bitrate,
+	"bitrate": $bitrate,
+
+	"streaming_duration": "$streaming_duration",
+	"recording_duration": "$recording_duration",
+
+	"streaming_status": "$streaming_status",
+	"recording_status": "$recording_status"
+}
+]];
+
+local log_file_formatting = [[
+[$current_time] Streaming duration: $streaming_duration, Recording Duration: $recording_duration, Streaming status: $streaming_status, Recording_status: $recording_status, Encoder: $encoder, Output Mode: $output_mode, Canvas Resolution: $canvas_resolution, Output Resolution: $output_resolution, Missed Frames: $missed_frames/$missed_total_frames ($missed_percents%), Skipped Frames: $skipped_frames/$skipped_total_frames ($skipped_percents%), Dropped Frames: $dropped_frames/$dropped_total_frames ($dropped_percents%), Congestion: $congestion% (avg. $average_congestion%), Memory Usage: $memory_usage MB, CPU Cores: $cpu_cores, CPU Usage: $cpu_usage%, Frame Time: $average_frame_time ms, FPS: $fps/$target_fps (avg. $average_fps), Bitrate: $bitrate kb/s, Audio Bitrate: $audio_bitrate kb/s, Recording bitrate: $recording_bitrate kb/s
 ]];
 
 local encoder_string = "x264?";
@@ -72,10 +128,10 @@ local cpu_cores_string = "";
 
 local average_frame_time_string = "";
 local fps_string = "";
-local target_fps_string = "30?";
+local target_fps_string = "30";
 local average_fps_string = "";
 
-local audio_bitrate_string = "160?";
+local audio_bitrate_string = "160";
 local bitrate_string = "";
 local recording_bitrate_string = "";
 
@@ -92,8 +148,6 @@ local last_bytes_time = 0;
 local recording_bitrate = 0;
 local recording_last_bytes_recorded = 0;
 
-local is_script_enabled = true;
-local is_bot_enabled = true;
 local is_timer_on = false;
 
 local total_ticks = 0;
@@ -563,47 +617,7 @@ function obs_stats_tick()
 	-- Update text source
 	if source ~= nil then
 		-- Make a string for display in a text source
-		local formatted_text = text_formatting;
-
-		formatted_text = formatted_text:gsub("$encoder", encoder_string);
-		formatted_text = formatted_text:gsub("$output_mode", output_mode_string);
-		
-		formatted_text = formatted_text:gsub("$canvas_resolution", canvas_resolution_string);
-		formatted_text = formatted_text:gsub("$output_resolution", output_resolution_string);
-
-		formatted_text = formatted_text:gsub("$missed_frames", lagged_frames_string);
-		formatted_text = formatted_text:gsub("$missed_total_frames", lagged_total_frames_string);
-		formatted_text = formatted_text:gsub("$missed_percents", lagged_percents_string);
-
-		formatted_text = formatted_text:gsub("$skipped_frames", skipped_frames_string);
-		formatted_text = formatted_text:gsub("$skipped_total_frames", skipped_total_frames_string);
-		formatted_text = formatted_text:gsub("$skipped_percents", skipped_percents_string);
-
-		formatted_text = formatted_text:gsub("$dropped_frames", dropped_frames_string);
-		formatted_text = formatted_text:gsub("$dropped_total_frames", dropped_total_frames_string);
-		formatted_text = formatted_text:gsub("$dropped_percents", dropped_percents_string);
-
-		formatted_text = formatted_text:gsub("$congestion", congestion_string);
-		formatted_text = formatted_text:gsub("$average_congestion",average_congestion_string);
-
-		formatted_text = formatted_text:gsub("$average_frame_time", average_frame_time_string);
-		formatted_text = formatted_text:gsub("$fps", fps_string);
-		formatted_text = formatted_text:gsub("$target_fps", target_fps_string);
-		formatted_text = formatted_text:gsub("$average_fps", average_fps_string);
-		
-		formatted_text = formatted_text:gsub("$memory_usage", memory_usage_string);
-		formatted_text = formatted_text:gsub("$cpu_cores", cpu_cores_string);
-		formatted_text = formatted_text:gsub("$cpu_usage", cpu_usage_string);
-
-		formatted_text = formatted_text:gsub("$audio_bitrate", audio_bitrate_string);
-		formatted_text = formatted_text:gsub("$recording_bitrate", recording_bitrate_string);
-		formatted_text = formatted_text:gsub("$bitrate", bitrate_string);
-
-		formatted_text = formatted_text:gsub("$streaming_duration", streaming_duration_string);
-		formatted_text = formatted_text:gsub("$recording_duration", recording_duration_string);
-
-		formatted_text = formatted_text:gsub("$streaming_status", streaming_status_string);
-		formatted_text = formatted_text:gsub("$recording_status", recording_status_string);
+		local formatted_text = format_variables(text_formatting);
 
 		local settings = obs.obs_data_create();
 		obs.obs_data_set_string(settings, "text", formatted_text);
@@ -611,6 +625,32 @@ function obs_stats_tick()
 		obs.obs_source_release(source);
 		obs.obs_data_release(settings);
 	end
+
+	if is_output_to_file_enabled then
+		local formatted_file_text = format_variables(file_output_formatting);
+		save_output_to_file(formatted_file_text);
+	end
+
+	if is_debug_mode_enabled then
+		local formatted_log_file_text = format_variables(log_file_formatting);
+		log_to_file(formatted_log_file_text);
+	end
+end
+
+function log_to_file(file_json_text)
+	local script_path_ = script_path();
+	local log_file_path = script_path_ .. log_file_name;
+
+	local log_file = io.open(log_file_path, "a");
+	log_file:write(file_json_text);
+	log_file:close();
+end
+
+function save_output_to_file(file_json_text)
+	local script_path_ = script_path();
+	local output_path = script_path_ .. file_output_name;
+
+	obs.os_quick_write_utf8_file(output_path, file_json_text, #file_json_text, false);
 end
 
 function read_profile_config()
@@ -739,9 +779,58 @@ function destroy_cpu_usage_info()
 	end
 end
 
+function format_variables(unformatted_text)
+	local formatted_text = unformatted_text;
+
+	formatted_text = formatted_text:gsub("$current_time", os.date("%d.%m.%Y %X"));
+
+	formatted_text = formatted_text:gsub("$encoder", encoder_string);
+	formatted_text = formatted_text:gsub("$output_mode", output_mode_string);
+	
+	formatted_text = formatted_text:gsub("$canvas_resolution", canvas_resolution_string);
+	formatted_text = formatted_text:gsub("$output_resolution", output_resolution_string);
+
+	formatted_text = formatted_text:gsub("$missed_frames", lagged_frames_string);
+	formatted_text = formatted_text:gsub("$missed_total_frames", lagged_total_frames_string);
+	formatted_text = formatted_text:gsub("$missed_percents", lagged_percents_string);
+
+	formatted_text = formatted_text:gsub("$skipped_frames", skipped_frames_string);
+	formatted_text = formatted_text:gsub("$skipped_total_frames", skipped_total_frames_string);
+	formatted_text = formatted_text:gsub("$skipped_percents", skipped_percents_string);
+
+	formatted_text = formatted_text:gsub("$dropped_frames", dropped_frames_string);
+	formatted_text = formatted_text:gsub("$dropped_total_frames", dropped_total_frames_string);
+	formatted_text = formatted_text:gsub("$dropped_percents", dropped_percents_string);
+
+	formatted_text = formatted_text:gsub("$congestion", congestion_string);
+	formatted_text = formatted_text:gsub("$average_congestion",average_congestion_string);
+
+	formatted_text = formatted_text:gsub("$average_frame_time", average_frame_time_string);
+	formatted_text = formatted_text:gsub("$fps", fps_string);
+	formatted_text = formatted_text:gsub("$target_fps", target_fps_string);
+	formatted_text = formatted_text:gsub("$average_fps", average_fps_string);
+	
+	formatted_text = formatted_text:gsub("$memory_usage", memory_usage_string);
+	formatted_text = formatted_text:gsub("$cpu_cores", cpu_cores_string);
+	formatted_text = formatted_text:gsub("$cpu_usage", cpu_usage_string);
+
+	formatted_text = formatted_text:gsub("$audio_bitrate", audio_bitrate_string);
+	formatted_text = formatted_text:gsub("$recording_bitrate", recording_bitrate_string);
+	formatted_text = formatted_text:gsub("$bitrate", bitrate_string);
+
+	formatted_text = formatted_text:gsub("$streaming_duration", streaming_duration_string);
+	formatted_text = formatted_text:gsub("$recording_duration", recording_duration_string);
+
+	formatted_text = formatted_text:gsub("$streaming_status", streaming_status_string);
+	formatted_text = formatted_text:gsub("$recording_status", recording_status_string);
+
+	return formatted_text;
+end
+
 function on_event(event)
 	if event == obs.OBS_FRONTEND_EVENT_FINISHED_LOADING then
 		print("scene loaded");
+		read_profile_config();
 
 		if is_script_enabled then
 			print("script is enabled");
@@ -816,6 +905,9 @@ function script_properties()
 	obs.obs_properties_add_text(properties, "text_formatting", "Text Formatting", obs.OBS_TEXT_MULTILINE);
 	obs.obs_properties_add_button(properties, "reset_formatting_button", "Reset Formatting", reset_formatting);
 
+	local enable_output_to_file_property = obs.obs_properties_add_bool(properties, "is_output_to_file_enabled", "Output to File");
+	local enable_debug_mode_property = obs.obs_properties_add_bool(properties, "is_debug_mode_enabled", "Debug Mode");
+
 	obs.obs_properties_apply_settings(properties, my_settings);
 
 	return properties;
@@ -835,6 +927,9 @@ function script_defaults(settings)
 	
 	obs.obs_data_set_default_string(settings, "text_source", "");
 	obs.obs_data_set_default_string(settings, "text_formatting", default_text_formatting);
+
+	obs.obs_data_set_default_bool(settings, "is_output_to_file_enabled", false);
+	obs.obs_data_set_default_bool(settings, "is_debug_mode_enabled", false);
 end
 
 function script_update(settings)
@@ -848,15 +943,29 @@ function script_update(settings)
 	
 	bot_nickname = obs.obs_data_get_string(settings, "bot_nickname"):lower();
 	bot_password = obs.obs_data_get_string(settings, "bot_password");
-	
 	channel_nickname = obs.obs_data_get_string(settings, "channel_nickname"):lower();
 	
 	text_source = obs.obs_data_get_string(settings, "text_source");
-	
 	text_formatting = obs.obs_data_get_string(settings, "text_formatting");
+
+	is_output_to_file_enabled = obs.obs_data_get_bool(settings, "is_output_to_file_enabled");
+	is_debug_mode_enabled = obs.obs_data_get_bool(settings, "is_debug_mode_enabled");
 
 	local physical_cores = obs.os_get_physical_cores();
 	local logical_cores = obs.os_get_logical_cores();
+
+	is_live = obs.obs_frontend_streaming_active();
+	
+	local recording_active = obs.obs_frontend_recording_active();
+	if obs.obs_frontend_recording_active() then
+		if obs.obs_frontend_recording_paused() then
+			recording_status_string = "Paused";
+		else 
+			recording_status_string = "On";
+		end
+	else
+		recording_status_string = "Off";
+	end
 
 	cpu_cores_string = string.format("%sC/%sT", physical_cores, logical_cores);
 
@@ -879,8 +988,6 @@ function script_update(settings)
 
 	if source == nil then
 		print("No source found");
-		is_obs_stats_timer_on = false;
-		return;
 	end
 	
 	obs.obs_source_release(source);
@@ -905,9 +1012,9 @@ end
 
 function script_description()
 	return [[
-<center><h2>OBS Stats on Stream v1.2</h2></center>
+<center><h2>OBS Stats on Stream v1.3</h2></center>
 <center><a href="https://twitch.tv/GreenComfyTea">twitch.tv/GreenComfyTea</a> - 2021</center>
-<center><p>Shows obs stats on stream and/or in Twitch chat. Supported data: encoder, output mode, canvas resolution, output resolution, missed frames, skipped frames, dropped frames, congestion,  average frame time, fps, memory usage, cpu core count, cpu usage, recording and streaming duration, audio bitrate, recording bitrate and streaming bitrate.</p></center>
+<center><p>Shows obs stats on stream and/or in Twitch chat. Supported data: encoder, output mode, canvas resolution, output resolution, missed frames, skipped frames, dropped frames, congestion,  average frame time, fps, memory usage, cpu core count, cpu usage, recording and streaming duration, audio bitrate, recording bitrate and streaming bitrate streaming status and recording status.</p></center>
 <center><a href="https://twitchapps.com/tmi/">Twitch Chat OAuth Password Generator</a></center>
 <center><a href="https://github.com/GreenComfyTea/OBS-Stats-on-Stream/blob/main/Text-Formatting-Variables.md">Text Formatting Variables</a></center>
 <center><a href="https://github.com/GreenComfyTea/OBS-Stats-on-Stream/blob/main/Bot-Commands.md">Bot commands</a></center>
@@ -916,6 +1023,6 @@ function script_description()
 end
 
 function script_load(settings)
-	print("script loaded");
 	obs.obs_frontend_add_event_callback(on_event);
+	print("script loaded");
 end
