@@ -540,6 +540,23 @@ function obs_stats_tick()
 		end
 	end
 
+	-- fix NaN
+	if rendered_frames == 0 then
+		rendered_frames = 1;
+	end
+	
+	if encoded_frames == 0 then
+		encoded_frames = 1;
+	end
+	
+	if total_frames == 0 then
+		total_frames = 1;
+	end
+	
+	if total_ticks == 0 then
+		total_ticks = 1;
+	end
+
 	-- Update strings with new values
 	lagged_frames_string = tostring(lagged_frames);
 	lagged_total_frames_string = tostring(rendered_frames);
