@@ -48,8 +48,8 @@ OBS Docs are very confusing. If you want to contribute feel free to message me, 
 Another way to support me is donating! Thank you for using this script!
 
  <a href="https://streamelements.com/greencomfytea/tip">
-  <img alt="Qries" src="https://panels-images.twitch.tv/panel-48897356-image-c6155d48-b689-4240-875c-f3141355cb56">
+  <img alt="Qries" src="https://panels.twitch.tv/panel-48897356-image-c6155d48-b689-4240-875c-f3141355cb56">
 </a>
 <a href="https://ko-fi.com/greencomfytea">
-  <img alt="Qries" src="https://panels-images.twitch.tv/panel-48897356-image-c2fcf835-87e4-408e-81e8-790789c7acbc">
+  <img alt="Qries" src="https://panels.twitch.tv/panel-48897356-image-c2fcf835-87e4-408e-81e8-790789c7acbc">
 </a>
