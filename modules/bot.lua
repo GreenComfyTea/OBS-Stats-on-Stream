@@ -186,7 +186,7 @@ function bot.process_commands(to_user, command)
 		
 	elseif command:match("^!congestion") then
 
-		bot.send_message(string.format("@%s -> Congestion: %s%% (average: %s%%)",
+		bot.send_message(string.format("@%s -> Congestion: %s%% (Average: %s%%)",
 			to_user,
 			formatted_stats.congestion,
 			formatted_stats.average_congestion
@@ -194,14 +194,14 @@ function bot.process_commands(to_user, command)
 		
 	elseif command:match("^!frame_time") or command:match("^!render_time") or command:match("^!frametime") or command:match("^!rendertime") then
 
-		bot.send_message(string.format("@%s -> Average Frametime: %s ms",
+		bot.send_message(string.format("@%s -> Average Frame Time: %s ms",
 			to_user,
 			formatted_stats.average_frame_time
 		));
 		
 	elseif command:match("^!fps") or command:match("^!framerate") then
 
-		bot.send_message(string.format("@%s -> FPS: %s/%s (average: %s)",
+		bot.send_message(string.format("@%s -> FPS: %s/%s (Average: %s)",
 			to_user,
 			formatted_stats.fps,
 			formatted_stats.target_fps,
@@ -280,7 +280,7 @@ function bot.process_commands(to_user, command)
 		
 	elseif command:match("^!obs_static_stats") or command:match("^!obsstaticstats") then
 
-		bot.send_message(string.format("@%s -> Encoder: %s, Output Mode: %s, Canvas Resolution: %s, Output Resolution: %s, CPU cores: %s, Audio Bitrate: %s kb/s",
+		bot.send_message(string.format("@%s -> Encoder: %s, Output Mode: %s, Canvas Resolution: %s, Output Resolution: %s, CPU Cores: %s, Audio Bitrate: %s kb/s",
 			to_user,
 			formatted_stats.encoder,
 			formatted_stats.output_mode,
@@ -292,7 +292,7 @@ function bot.process_commands(to_user, command)
 
 	elseif command:match("^!obs_stats") or command:match("^!obsstats") or command:match("^!obs_dynamic_stats") or command:match("^!obsdynamicstats") then
 
-		bot.send_message(string.format("@%s -> Missed: %s/%s (%s%%), Skipped: %s/%s (%s%%), Dropped: %s/%s (%s%%), Cong.: %s%% (average: %s%%), Frametime: %s ms, FPS: %s/%s (average: %s), RAM: %s MB, CPU: %s%%, Bitrate: %s kb/s",
+		bot.send_message(string.format("@%s -> Missed: %s/%s (%s%%), Skipped: %s/%s (%s%%), Dropped: %s/%s (%s%%), Cong.: %s%% (average: %s%%), Frame Time: %s ms, FPS: %s/%s (average: %s), RAM: %s MB, CPU: %s%%, Bitrate: %s kb/s",
 			to_user,
 			formatted_stats.missed_frames,
 			formatted_stats.total_missed_frames,
