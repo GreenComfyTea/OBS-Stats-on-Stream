@@ -16,9 +16,9 @@ Shows obs stats on stream and/or in Twitch chat. Supported data: encoder, output
 
 
 # How to use
-1. Download the script files. You only need `OBS-Stats-on-Stream.lua` and `ljsocket.lua`. These two files must be placed in the same folder.
+1. Download the script from the release page. Unzip the archive. 
 2. Add a text source to your scene. This source will be used to display the data.
-3. Open Tools -> Scripts. Add the `OBS-Stats-on-Stream.lua` script (only this one).
+3. Open Tools -> Scripts. Add the `OBS-Stats-on-Stream-Precompiled.lua` script.
 4. Configure the script.
 	* If you don't need Twitch Bot functionality, uncheck `Enable Bot` mark.
     * `Update Delay` determines how often the data will be updated. 1000 ms means once a second. 100 ms means 10 times a second.
@@ -36,6 +36,8 @@ Shows obs stats on stream and/or in Twitch chat. Supported data: encoder, output
 >**:pushpin: NOTE:**   If you don't need Twitch Bot functionality, you can use `Enable Bot` checkbox to disable it. You also don't need to type `Bot Nickname`, `Bot OAuth Password` and `Channel Nickname` in that case.
 
 >**:pushpin: NOTE:**   Bot only works on Twitch. I have no knowledge nor intentions to make it work on YT or any other platform.
+
+>**:pushpin: NOTE:**   If you use source code instead of the release page, the script will not come precompiled into one file, but instead will be composed of many files. `OBS-Stats-on-Stream.lua` file and a bunch of files in `modules` folder. The file and the folder must be located in the same place and in OBS you only need to add `OBS-Stats-on-Stream.lua` as a script.
 
 # Contribution
 
