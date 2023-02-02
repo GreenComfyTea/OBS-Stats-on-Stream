@@ -117,6 +117,8 @@ function script_properties()
 	local channel_nickname_property = obslua.obs_properties_add_text(properties, "channel_nickname", "Channel Nickname", obslua.OBS_TEXT_DEFAULT);
 	obslua.obs_property_set_long_description(channel_nickname_property, "Nickname of your channel for bot to join. If empty bot will join his own chat.");
 
+	obslua.obs_properties_add_button(properties, "recconect_button", "Reconnect...", bot.reconnect);
+
 	local text_source_property = obslua.obs_properties_add_list(properties, "text_source", "Text Source", obslua.OBS_COMBO_TYPE_EDITABLE, obslua.OBS_COMBO_FORMAT_STRING);
 
 	local sources = obslua.obs_enum_sources();
