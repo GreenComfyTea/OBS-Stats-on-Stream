@@ -16,7 +16,7 @@ local require = require;
 local description = [[
 <center><h2>OBS Stats on Stream v2.0</h2></center>
 <center><a href="https://twitch.tv/GreenComfyTea">twitch.tv/GreenComfyTea</a> - 2023</center>
-<center><p>Shows obs stats on stream and/or in Twitch chat. Supported data: encoder, output mode, canvas resolution, output resolution, missed frames, skipped frames, dropped frames, congestion,  average frame time, fps, memory usage, cpu core count, cpu usage, recording and streaming duration, audio bitrate, recording bitrate and streaming bitrate streaming status and recording status.</p></center>
+<center><p>Shows OBS Stats (like Bitrate, Dropped Frames and more) on Stream and/or in Twitch Chat.</p></center>
 <center><a href="https://twitchapps.com/tmi/">Twitch Chat OAuth Password Generator</a></center>
 <center><a href="https://github.com/GreenComfyTea/OBS-Stats-on-Stream/blob/main/Text-Formatting-Variables.md">Text Formatting Variables</a></center>
 <center><a href="https://github.com/GreenComfyTea/OBS-Stats-on-Stream/blob/main/Bot-Commands.md">Bot commands</a></center>
