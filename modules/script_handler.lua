@@ -15,11 +15,11 @@ local require = require;
 
 local description = [[
 <center><h2>OBS Stats on Stream v2.0</h2></center>
-<center><a href="https://linktr.ee/greencomfytea">linktr.ee/greencomfytea</a> - 2023</center>
+<center>By <a href="https://twitch.tv/greencomfytea">GreenComfyTea</a> - 2023</center>
+<center><a href="https://linktr.ee/greencomfytea">Socials</a> | <a href="https://ko-fi.com/greencomfytea">Buy me a tea</a> | <a href="https://streamelements.com/greencomfytea/tip">Donate</a></center>
 <center><p>Shows OBS Stats (like Bitrate, Dropped Frames and more) on Stream and/or in Twitch Chat.</p></center>
 <center><a href="https://twitchapps.com/tmi/">Twitch Chat OAuth Password Generator</a></center>
-<center><a href="https://github.com/GreenComfyTea/OBS-Stats-on-Stream/blob/main/Text-Formatting-Variables.md">Text Formatting Variables</a></center>
-<center><a href="https://github.com/GreenComfyTea/OBS-Stats-on-Stream/blob/main/Bot-Commands.md">Bot commands</a></center>
+<center><a href="https://github.com/GreenComfyTea/OBS-Stats-on-Stream/blob/main/Text-Formatting-Variables.md">Text Formatting Variables</a> | <a href="https://github.com/GreenComfyTea/OBS-Stats-on-Stream/blob/main/Bot-Commands.md">Bot commands</a></center>
 <hr/>
 ]];
 
