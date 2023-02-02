@@ -44,7 +44,7 @@ function data_format.update()
 	data_format.stats.average_frame_time = string.format("%.1f", stats.average_frame_time);
 	data_format.stats.fps = string.format("%.2f", stats.fps);
 	data_format.stats.target_fps = string.format("%d", stats.target_fps);
-	data_format.stats.average_fps = string.format("%d", stats.average_fps);
+	data_format.stats.average_fps = string.format("%.2f", stats.average_fps);
 
 	data_format.stats.memory_usage = string.format("%.1f", stats.memory_usage);
 	data_format.stats.cpu_physical_cores = string.format("%d", stats.cpu_physical_cores);
