@@ -37,7 +37,7 @@
 8. `!congestion [to_user]`
 
 	```
-	@to_user -> Congestion: $congestion% (average: $average_congestion%)
+	@to_user -> Congestion: $congestion% (Average: $average_congestion%)
 	```
 9. `!frame_time [to_user]` (aliases: `!render_time` `!frametime` `!rendertime`)
 
@@ -47,22 +47,22 @@
 10. `!fps [to_user]` (aliases: `!framerate`)
 
 	```
-	@to_user -> FPS: $fps/%target_fps (average: %average_fps)
+	@to_user -> FPS: $fps/%target_fps (Average: %average_fps)
 	```
 11. `!memory_usage [to_user]` (aliases: `!memoryusage` `!memory`)
 
 	```
-	@to_user -> Memory usage: $memory_usage MB
+	@to_user -> Memory Usage: $memory_usage MB
 	```
 12. `!cpu_cores [to_user]` (aliases: `!cpuccores` `!cores`)
 
 	```
-	@to_user -> CPU cores: $cpu_cores
+	@to_user -> CPU Cores: $cpu_cores
 	```
 13. `!cpu_usage [to_user]` (aliases: `!cpuusage`)
 
 	```
-	@to_user -> CPU usage: $cpu_usage%
+	@to_user -> CPU Usage: $cpu_usage%
 	```
 14. `!audio_bitrate [to_user]` (aliases: `!audiobitrate`)
 
@@ -87,34 +87,34 @@
 18. `!streaming_duration [to_user]` (aliases: `!streamingduration`)
 
 	```
-	@to_user -> Streaming duration: 03:32:59
+	@to_user -> Streaming Duration: 03:32:59
 	```
 19. `!recording_duration [to_user]` (aliases: `!recordingduration`)
 
 	```
-	@to_user -> Recording duration: 03:32:59
+	@to_user -> Recording Duration: 03:32:59
 	```
 20. `!streaming_status [to_user]` (aliases: `!streamingstatus`)
 
 	```
-	@to_user -> Streaming status: Live
+	@to_user -> Streaming Status: Live
 	```
 	```
-	@to_user -> Streaming status: Reconnecting
+	@to_user -> Streaming Status: Reconnecting
 	```
 	```
-	@to_user -> Streaming status: Offline
+	@to_user -> Streaming Status: Offline
 	```
 21. `!recording_status [to_user]`  (aliases: `!recordingstatus`)
 
 	```
-	@to_user -> Recording status: On
+	@to_user -> Recording Status: On
 	```
 	```
-	@to_user -> Recording status: Paused
+	@to_user -> Recording Status: Paused
 	```
 	```
-	@to_user -> Recording status: Off
+	@to_user -> Recording Status: Off
 	```
 22. `!obs_static_stats [to_user]`  (aliases: `!obsstaticstats`)
 
@@ -123,20 +123,20 @@
 	Output Mode: $output_mode,
 	Canvas Resolution: $canvas_resolution,
 	Output Resolution: $output_resolution,
-	CPU cores: $cpu_cores,
+	CPU Cores: $cpu_cores,
 	Audio Bitrate: $audio_bitrate kb/s
 	```
 23. `!obsstats [to_user]`
 
 	```
-	@to_user -> Missed frames: $missed_frames/$missed_total_frames ($missed_percents%),
-	Skipped frames: $skipped_frames/$skipped_total_frames ($skipped_percents%),
-	Dropped frames: $dropped_frames/$dropped_total_frames ($dropped_percents%),
-	Congestion: $congestion% (avg. $average_congestion%),
-	Average frame time: $average_frame_time ms,
+	@to_user -> Missed: $missed_frames/$missed_total_frames ($missed_percents%),
+	Skipped: $skipped_frames/$skipped_total_frames ($skipped_percents%),
+	Dropped: $dropped_frames/$dropped_total_frames ($dropped_percents%),
+	Cong.: $congestion% (avg. $average_congestion%),
+	Frame Fime: $average_frame_time ms,
 	FPS: $fps/$target_fps (average: $average_fps),
-	Memory Usage: $memory_usage MB,
-	CPU Usage: $cpu_usage%,
+	RAM: $memory_usage MB,
+	CPU: $cpu_usage%,
 	Bitrate: $bitrate kb/s
 	```
 	
