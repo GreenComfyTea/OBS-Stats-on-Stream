@@ -50,6 +50,7 @@ data.ticks = 0;
 
 data.streaming_statuses = {
 	live = "Live",
+	reconnecting = "Reconnecting",
 	offline = "Offline"
 };
 
@@ -135,6 +136,7 @@ function data.update()
 	data.update_skipped_frames();
 	data.update_dropped_frames(streaming_output);
 	data.update_congestion(streaming_output);
+	data.update_reconnection_status();
 	data.update_streaming_bitrate(streaming_output, bitrate_time_passed);
 	data.update_streaming_duration();
 	data.update_recording_bitrate(recording_output, bitrate_time_passed);
@@ -308,6 +310,23 @@ function data.update_congestion(streaming_output)
 
 		data.stats.congestion = congestion;
 		data.stats.average_congestion =  cumulative_congestion / data.ticks;
+	end
+end
+
+function data.update_reconnection_status(streaming_output)
+	if streaming_output == nil then
+		return;
+	end
+
+	if data.stats.streaming_status == data.streaming_statuses.live
+	or data.stats.streaming_status == data.streaming_statuses.reconnecting then
+
+		local is_reconnecting = obslua.obs_output_reconnecting(streaming_output);
+		if is_reconnecting then
+			data.stats.streaming_status = data.streaming_statuses.reconnecting;
+		else
+			data.stats.streaming_status = data.streaming_statuses.live;
+		end
 	end
 end
 
