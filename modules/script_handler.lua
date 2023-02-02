@@ -171,6 +171,13 @@ end
 function script_update(settings)
 	my_settings = settings;
 
+	local previous_is_script_enabled = script_handler.is_script_enabled;
+	local previous_is_bot_enabled = script_handler.is_bot_enabled;
+	local previous_bot_delay = script_handler.bot_delay;
+	local previous_bot_nickname = script_handler.bot_nickname;
+	local previous_bot_password = script_handler.bot_password;
+	local previous_channel_nickname = script_handler.channel_nickname;
+
 	script_handler.is_script_enabled = obslua.obs_data_get_bool(settings, "is_script_enabled");
 	script_handler.is_bot_enabled = obslua.obs_data_get_bool(settings, "is_bot_enabled");
 
@@ -187,6 +194,13 @@ function script_update(settings)
 	script_handler.is_output_to_file_enabled = obslua.obs_data_get_bool(settings, "is_output_to_file_enabled");
 	script_handler.is_logging_enabled = obslua.obs_data_get_bool(settings, "is_logging_enabled");
 
+	local reconnect_bot = script_handler.is_script_enabled ~= previous_is_script_enabled
+		or script_handler.is_bot_enabled ~= previous_is_bot_enabled
+		or script_handler.bot_delay ~= previous_bot_delay
+		or script_handler.bot_nickname ~= previous_bot_nickname
+		or script_handler.bot_password ~= previous_bot_password
+		or script_handler.channel_nickname ~= previous_channel_nickname;
+
 	data.start_cpu_usage_info();
 
 	if script_handler.is_timer_on then
@@ -196,8 +210,10 @@ function script_update(settings)
 		print("Timer removed.");
 	end
 
-	bot.close_socket();
-
+	if reconnect_bot then
+		bot.close_socket();
+	end
+	
 	print("Settings were updated.");
 
 	profile_handler.read_config();
@@ -210,7 +226,9 @@ function script_update(settings)
 		obslua.timer_add(script_handler.tick, script_handler.timer_delay);
 		print("Timer added.");
 
-		bot.init_socket();
+		if reconnect_bot then
+			bot.init_socket();
+		end
 	end
 end
 
