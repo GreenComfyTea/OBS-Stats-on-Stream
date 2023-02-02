@@ -325,7 +325,10 @@ function bot.auth()
 end
 
 function bot.send(message)
-	print(string.format("Sending Message: %s", message));
+	if message ~= "PONG" then
+		print(string.format("Sending Message: %s", message));
+	end
+
 	assert(bot_socket:send(
 		string.format("%s\r\n", message)
 	));
