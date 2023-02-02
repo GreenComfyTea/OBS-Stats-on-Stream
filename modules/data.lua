@@ -136,7 +136,7 @@ function data.update()
 	data.update_skipped_frames();
 	data.update_dropped_frames(streaming_output);
 	data.update_congestion(streaming_output);
-	data.update_reconnection_status();
+	data.update_reconnection_status(streaming_output);
 	data.update_streaming_bitrate(streaming_output, bitrate_time_passed);
 	data.update_streaming_duration();
 	data.update_recording_bitrate(recording_output, bitrate_time_passed);
