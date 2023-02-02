@@ -3,6 +3,21 @@ local socket = {}
 local e = {}
 local errno = {}
 
+local assert = assert;
+local bit = bit;
+local jit = jit;
+local string = string;
+local tostring = tostring;
+local pairs = pairs;
+local ipairs = ipairs;
+local error = error;
+local type = type;
+local tonumber = tonumber;
+local table = table;
+local setmetatable = setmetatable;
+local unpack = unpack;
+local print = print;
+
 do
     local C
 
@@ -415,7 +430,7 @@ do
             return true
         end
 
-		return nil, socket.lasterror(ret)
+        return nil, ffi.string(socket.lasterror(ret))
     end
 
     function socket.getnameinfo(address, length, host, hostlen, serv, servlen, flags)
@@ -424,7 +439,7 @@ do
             return true
         end
 
-        return nil, socket.lasterror(ret)
+        return nil, ffi.string(socket.lasterror(ret))
     end
 
     do
@@ -689,6 +704,7 @@ do
     errno = {
         EAGAIN = 11,
         EWOULDBLOCK = 11, -- is errno.EAGAIN
+        EINVAL = 22,
         ENOTSOCK = 88,
         ECONNRESET = 104,
         EINPROGRESS = 115,
@@ -723,6 +739,7 @@ do
         e.SO_DONTROUTE = 16
         e.SO_RCVLOWAT = 4100
 
+        errno.EINVAL = 10022
         errno.EAGAIN = 10035 -- Note: Does not exist on Windows
         errno.EWOULDBLOCK = 10035
         errno.EINPROGRESS = 10036
@@ -739,6 +756,7 @@ do
         e.SO_DONTROUTE = 0x0010
         e.SO_BROADCAST = 0x0020
 
+        errno.EINVAL = 22
         errno.EAGAIN = 35
         errno.EWOULDBLOCK = errno.EAGAIN
         errno.EINPROGRESS = 36
@@ -852,7 +870,7 @@ local function addrinfo_get_ip(self)
         return nil
     end
     local str = ffi.new("char[256]")
-    local addr = assert(socket.inet_ntop(AF.lookup[self.family], self.addrinfo.ai_addr.sa_data, str, ffi.sizeof(str)))
+    local addr = assert(socket.inet_ntop(AF.lookup[self.family], ffi.cast("struct sockaddr_in*", self.addrinfo.ai_addr).sin_addr, str, ffi.sizeof(str)))
     return ffi.string(addr)
 end
 
@@ -861,9 +879,9 @@ local function addrinfo_get_port(self)
         return nil
     end
     if self.family == "inet" then
-        return ffi.cast("struct sockaddr_in*", self.addrinfo.ai_addr).sin_port
+        return socket.ntohs(ffi.cast("struct sockaddr_in*", self.addrinfo.ai_addr).sin_port)
     elseif self.family == "inet6" then
-        return ffi.cast("struct sockaddr_in6*", self.addrinfo.ai_addr).sin6_port
+        return socket.ntohs(ffi.cast("struct sockaddr_in6*", self.addrinfo.ai_addr).sin6_port)
     end
 
     return nil, "unknown family " .. tostring(self.family)
