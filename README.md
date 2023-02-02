@@ -18,7 +18,7 @@ Shows obs stats on stream and/or in Twitch chat. Supported data: encoder, output
 # How to use
 1. Download the script from the release page. Unzip the archive. 
 2. Add a text source to your scene. This source will be used to display the data.
-3. Open Tools -> Scripts. Add the `OBS-Stats-on-Stream-Precompiled.lua` script.
+3. Open Tools -> Scripts. Add the `OBS-Stats-on-Stream.lua` script.
 4. Configure the script.
 	* If you don't need Twitch Bot functionality, uncheck `Enable Bot` mark.
     * `Update Delay` determines how often the data will be updated. 1000 ms means once a second. 100 ms means 10 times a second.

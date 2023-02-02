@@ -8,13 +8,13 @@
 6. `$canvas_resolution`
 7. `$output_resolution`
 8. `$missed_frames`
-9. `$total_missed_frames`
+9. `$total_missed_frames`/`$missed_total_frames`
 10. `$missed_percents`
 11. `$skipped_frames`
-12. `$total_skipped_frames`
+12. `$total_skipped_frames`/`$skipped_total_frames`
 13. `$skipped_percents`
 14. `$dropped_frames`
-15. `$total_dropped_frames`
+15. `$total_dropped_frames`/`$dropped_total_frames`
 16. `$dropped_percents`
 17. `$congestion`
 18. `$average_congestion`
