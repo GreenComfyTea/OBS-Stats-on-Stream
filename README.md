@@ -47,7 +47,7 @@
 	</a>
 </p>
 <p align="center">
-	<a href="[https://www.nexusmods.com/monsterhunterrise/mods/26](https://obsproject.com/)">
+	<a href="https://obsproject.com/">
 		<img alt="REFramework Dependency" src="https://img.shields.io/badge/dependency-OBS%20Studio-green" />
 	</a>
 </p>
