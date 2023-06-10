@@ -1,7 +1,9 @@
-# OBS Stats on Stream
-Shows obs stats on stream and/or in Twitch chat. Supported data: encoder, output mode, canvas resolution, output resolution, missed frames, skipped frames, dropped frames, congestion,  average frame time, fps, memory usage, cpu core count, cpu usage, audio bitrate, video bitrate, streaming duration, recording duration, streaming status and recording status.
+<p align="center">
+	<h2 align="center"><b>OBS Stats on Stream</b></h2>
+	<p align="center">Shows obs stats on stream and/or in Twitch chat. Supported data: encoder, output mode, canvas resolution, output resolution, missed frames, skipped frames, dropped frames, congestion,  average frame time, fps, memory usage, cpu core count, cpu usage, audio bitrate, video bitrate, streaming duration, recording duration, streaming status and recording status.</p>
+</p>
 
-<table style="width:100%">
+<table style="width:100%" align="center">
 <tr><th colspan="2"></th></tr>
 <tr>
 	<td align="center"><a href="./Text-Formatting-Variables.md">Text Formatting Variables</a></td>
@@ -10,10 +12,117 @@ Shows obs stats on stream and/or in Twitch chat. Supported data: encoder, output
   <tr><th colspan="2"></th></tr>
 </table>
 
-<img src="https://i.imgur.com/uMnrq4r.png" />
-<img src="https://i.imgur.com/6E7Ku9B.png" />
-<img src="https://i.imgur.com/Wfi0c1u.png" />
+<p align="center">
+	<a href="https://github.com/greencomfytea/obs-stats-on-stream/graphs/contributors">
+		<img alt="Contributors" src="https://img.shields.io/github/contributors/greencomfytea/obs-stats-on-stream" />
+	</a>
+	<a href="https://github.com/greencomfytea/obs-stats-on-stream/issues">
+		<img alt="Issues" src="https://img.shields.io/github/issues/greencomfytea/obs-stats-on-stream" />
+	</a>
+	<a href="https://github.com/greencomfytea/obs-stats-on-stream/issues">
+		<img alt="Issues Closed" src="https://img.shields.io/github/issues-closed/greencomfytea/obs-stats-on-stream" />
+	</a>
+	<a href="https://github.com/greencomfytea/obs-stats-on-stream/pulls">
+		<img alt="Pull Requests" src="https://img.shields.io/github/issues-pr/greencomfytea/obs-stats-on-stream" />
+	</a>
+	<a href="https://github.com/greencomfytea/obs-stats-on-stream/pulls">
+		<img alt="Pull Requests Closed" src="https://img.shields.io/github/issues-pr-closed/greencomfytea/obs-stats-on-stream" />
+	</a>
+</p>
+<p align="center">
+	<a href="https://github.com/greencomfytea/obs-stats-on-stream/blob/main/LICENSE">
+		<img alt="License" src="https://img.shields.io/github/license/greencomfytea/obs-stats-on-stream" />
+	</a>
+	<a href="https://github.com/greencomfytea/obs-stats-on-stream/releases">
+		<img alt="Release Version" src="https://img.shields.io/github/v/release/greencomfytea/obs-stats-on-stream" />
+	</a>
+	<a href="https://github.com/greencomfytea/obs-stats-on-stream/releases">
+		<img alt="Release Date" src="https://img.shields.io/github/release-date/greencomfytea/obs-stats-on-stream" />
+	</a>
+	<a href="">
+		<img alt="Platform" src="https://img.shields.io/badge/platform-win%20%7C%20linux%20%7C%20steam%20deck-lightgrey" />
+	</a>
+	<a href="">
+		<img alt="Maintenance" src="https://img.shields.io/maintenance/yes/2023" />
+	</a>
+</p>
+<p align="center">
+	<a href="[https://www.nexusmods.com/monsterhunterrise/mods/26](https://obsproject.com/)">
+		<img alt="REFramework Dependency" src="https://img.shields.io/badge/dependency-OBS%20Studio-green" />
+	</a>
+</p>
+<p align="center">
+	<a href="">
+		<img alt="Repo Size" src="https://img.shields.io/github/repo-size/greencomfytea/obs-stats-on-stream" />
+	</a>
+	<a href="">
+		<img alt="Goto Counter" src="https://img.shields.io/github/search/greencomfytea/obs-stats-on-stream/goto" />
+	</a>
+	<a href="https://github.com/sponsors/greencomfytea">
+		<img alt="Sponsors" src="https://img.shields.io/github/sponsors/greencomfytea" />
+	</a>
+	<a href="">
+		<img alt="Watchers" src="https://img.shields.io/github/watchers/greencomfytea/obs-stats-on-stream" />
+	</a>
+	<a href="https://github.com/greencomfytea/obs-stats-on-stream/forks">
+		<img alt="Forks" src="https://img.shields.io/github/forks/greencomfytea/obs-stats-on-stream" />
+	</a>
+	<a href="">
+		<img alt="Stars" src="https://img.shields.io/github/stars/greencomfytea/obs-stats-on-stream" />
+	</a>
+</p>
+<p align="center">
+	<a href="https://github.com/greencomfytea/obs-stats-on-stream/commits/main">
+		<img alt="Last Commit" src="https://img.shields.io/github/last-commit/greencomfytea/obs-stats-on-stream" />
+	</a>
+	<a href="https://github.com/greencomfytea/obs-stats-on-stream/commits/main">
+		<img alt="Commits Since" src="https://img.shields.io/github/commits-since/greencomfytea/obs-stats-on-stream/latest" />
+	</a>
+	<a href="https://github.com/greencomfytea/obs-stats-on-stream/graphs/commit-activity">
+		<img alt="Commit Activity" src="https://img.shields.io/github/commit-activity/t/greencomfytea/obs-stats-on-stream" />
+	</a>
+	<a href="https://github.com/greencomfytea/obs-stats-on-stream/graphs/commit-activity">
+		<img alt="Commit Activity (Year)" src="https://img.shields.io/github/commit-activity/y/greencomfytea/obs-stats-on-stream" />
+	</a>
+	<a href="https://github.com/greencomfytea/obs-stats-on-stream/graphs/commit-activity">
+		<img alt="Commit Activity (Month)" src="https://img.shields.io/github/commit-activity/m/greencomfytea/obs-stats-on-stream" />
+	</a>
+	<a href="https://github.com/greencomfytea/obs-stats-on-stream/graphs/commit-activity">
+		<img alt="Commit Activity (Week)" src="https://img.shields.io/github/commit-activity/w/greencomfytea/obs-stats-on-stream" />
+	</a>
+</p>
+<p align="center">
+	<a href="https://obsproject.com/forum/resources/obs-stats-on-stream.1319/">
+		<img alt="Website" src="https://img.shields.io/website?down_color=red&down_message=down&up_color=green&up_message=up&url=https://obsproject.com/forum/resources/obs-stats-on-stream.1319/" />
+	</a>
+	<a href="https://github.com/greencomfytea?tab=followers">
+		<img alt="Followers" src="https://img.shields.io/github/followers/greencomfytea" />
+	</a>
+	<a href="https://twitter.com/greencomfytea">
+		<img alt="Twitter" src="https://img.shields.io/twitter/follow/greencomfytea" />
+	</a>
+	<a href="https://www.twitch.tv/greencomfytea">
+		<img alt="Twitch" src="https://img.shields.io/twitch/status/greencomfytea" />
+	</a>
+</p>
 
+<p align="center">
+	<a>
+		<img align="center" src="https://i.imgur.com/uMnrq4r.png" />
+	</a>
+</p>
+
+<p align="center">
+	<a>
+		<img align="center" src="https://i.imgur.com/6E7Ku9B.png" />
+	</a>
+</p>
+
+<p align="center">
+	<a>
+		<img align="center" src="https://i.imgur.com/Wfi0c1u.png" />
+	</a>
+</p>
 
 # How to use
 1. Download the script from the release page. Unzip the archive. 
