@@ -88,7 +88,7 @@
 	</a>
 <br>
 	<a href="https://obsproject.com/forum/resources/obs-stats-on-stream.1319">
-		<img alt="Website" src="https://custom-icon-badges.demolab.com/website?down_color=red&down_message=down&up_color=brightgreen&up_message=up&url=https://obsproject.com/forum/resources/obs-stats-on-stream.1319?logo=link" />
+		<img alt="Website" src="https://custom-icon-badges.demolab.com/website?down_color=red&down_message=down&up_color=brightgreen&up_message=up&logo=link&url=https://obsproject.com/forum/resources/obs-stats-on-stream.1319" />
 	</a>
 	<a href="https://github.com/greencomfytea?tab=followers">
 		<img alt="Followers" src="https://custom-icon-badges.demolab.com/github/followers/greencomfytea?logo=people" />
