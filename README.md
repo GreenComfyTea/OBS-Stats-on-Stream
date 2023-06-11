@@ -106,7 +106,7 @@
 	<a href="https://github.com/topics/open-source">
 		<img alt="Open Source" src="https://img.shields.io/badge/open%20source-%20yes-brightgreen?logo=openvpn" />
 	</a>
-	<a href="https://learn.microsoft.com/en-us/dotnet/csharp/">
+	<a href="https://docs.obsproject.com/scripting">
 		<img alt="Written in" src="https://custom-icon-badges.demolab.com/badge/written%20in-lua-000080?logo=terminal" />
 	</a>
 </p>
