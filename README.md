@@ -4,12 +4,16 @@
 </p>
 
 <table style="width:100%" align="center">
-<tr><th colspan="2"></th></tr>
-<tr>
-	<td align="center"><a href="./Text-Formatting-Variables.md">Text Formatting Variables</a></td>
-	<td align="center"><a href="./Bot-Commands.md">Bot Commands</a></td>	
-</tr>
-  <tr><th colspan="2"></th></tr>
+	<tr>
+		<th colspan="2"></th>
+	</tr>
+	<tr>
+		<td align="center"><a href="./Text-Formatting-Variables.md">Text Formatting Variables</a></td>
+		<td align="center"><a href="./Bot-Commands.md">Bot Commands</a></td>	
+	</tr>
+	<tr>
+		<th colspan="2"></th>
+	</tr>
 </table>
 
 <p align="center">
@@ -28,7 +32,7 @@
 	<a href="https://github.com/greencomfytea/obs-stats-on-stream/pulls">
 		<img alt="Pull Requests Closed" src="https://custom-icon-badges.demolab.com/github/issues-pr-closed/greencomfytea/obs-stats-on-stream?logo=git-pull-request-closed" />
 	</a>
-<br>
+	<br>
 	<a href="https://github.com/greencomfytea/obs-stats-on-stream/blob/main/LICENSE">
 		<img alt="License" src="https://custom-icon-badges.demolab.com/github/license/greencomfytea/obs-stats-on-stream?logo=law" />
 	</a>
@@ -44,17 +48,17 @@
 	<a href="">
 		<img alt="Maintenance" src="https://custom-icon-badges.demolab.com/maintenance/yes/2023?logo=tools" />
 	</a>
-<br>
+	<br>
 	<a href="https://github.com/greencomfytea/obs-stats-on-stream/commits/main">
 		<img alt="Last Commit" src="https://custom-icon-badges.demolab.com/github/last-commit/greencomfytea/obs-stats-on-stream?logo=git-commit" />
 	</a>
 	<a href="https://github.com/greencomfytea/obs-stats-on-stream/commits/main">
 		<img alt="Commits Since" src="https://custom-icon-badges.demolab.com/github/commits-since/greencomfytea/obs-stats-on-stream/latest?logo=git-commit" />
 	</a>
-<a href="https://github.com/greencomfytea/obs-stats-on-stream/commits/main">
+	<a href="https://github.com/greencomfytea/obs-stats-on-stream/commits/main">
 		<img alt="Commits" src="https://custom-icon-badges.demolab.com/github/commit-activity/t/greencomfytea/obs-stats-on-stream?logo=git-commit" />
 	</a>
-<br>
+	<br>
 	<a href="https://github.com/greencomfytea/obs-stats-on-stream/graphs/commit-activity">
 		<img alt="Commit Activity (Year)" src="https://custom-icon-badges.demolab.com/github/commit-activity/y/greencomfytea/obs-stats-on-stream?logo=pulse" />
 	</a>
@@ -64,7 +68,7 @@
 	<a href="https://github.com/greencomfytea/obs-stats-on-stream/graphs/commit-activity">
 		<img alt="Commit Activity (Week)" src="https://custom-icon-badges.demolab.com/github/commit-activity/w/greencomfytea/obs-stats-on-stream?logo=pulse" />
 	</a>
-<br>
+	<br>
 	<a href="">
 		<img alt="Repo Size" src="https://custom-icon-badges.demolab.com/github/repo-size/greencomfytea/obs-stats-on-stream?logo=database" />
 	</a>
@@ -86,7 +90,7 @@
 	<a href="https://github.com/greencomfytea/obs-stats-on-stream/graphs/traffic">
 		<img alt="Hits" src="https://custom-icon-badges.demolab.com/endpoint?url=https://hits.dwyl.com/greencomfytea/obs-stats-on-stream.json?color=blue&logo=eye" />
 	</a>
-<br>
+	<br>
 	<a href="https://obsproject.com/forum/resources/obs-stats-on-stream.1319">
 		<img alt="Website" src="https://custom-icon-badges.demolab.com/website?down_color=red&down_message=down&up_color=brightgreen&up_message=up&logo=link&url=https://obsproject.com/forum/resources/obs-stats-on-stream.1319" />
 	</a>
@@ -99,7 +103,7 @@
 	<a href="https://www.twitch.tv/greencomfytea">
 		<img alt="Twitch" src="https://img.shields.io/twitch/status/greencomfytea?logo=twitch" />
 	</a>
-<br>
+	<br>
 	<a href="https://github.com/greencomfytea">
 		<img alt="Author" src="https://custom-icon-badges.demolab.com/badge/author-GreenComfyTea-green?logo=person" />
 	</a>
