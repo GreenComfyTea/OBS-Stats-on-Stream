@@ -54,8 +54,12 @@
 		<img alt="Repo Size" src="https://custom-icon-badges.demolab.com/github/repo-size/greencomfytea/obs-stats-on-stream?logo=database" />
 	</a>
 	<a href="">
+		<img alt="Line Count" src="https://sloc.xyz/github/greencomfytea/obs-stats-on-stream" />
+	</a>
+	<a href="">
 		<img alt="Goto Counter" src="https://custom-icon-badges.demolab.com/github/search/greencomfytea/obs-stats-on-stream/goto?logo=git-compare" />
 	</a>
+	<br>
 	<a href="https://github.com/sponsors/greencomfytea">
 		<img alt="Sponsors" src="https://custom-icon-badges.demolab.com/github/sponsors/greencomfytea?logo=heart" />
 	</a>
@@ -72,14 +76,15 @@
 		<img alt="Hits" src="https://custom-icon-badges.demolab.com/endpoint?url=https://hits.dwyl.com/greencomfytea/obs-stats-on-stream.json?color=blue&logo=eye" />
 	</a>
 	<br>
+	<br>
+	<a href="https://github.com/greencomfytea/obs-stats-on-stream/commits/main">
+		<img alt="Commits" src="https://custom-icon-badges.demolab.com/github/commit-activity/t/greencomfytea/obs-stats-on-stream?logo=git-commit" />
+	</a>
 	<a href="https://github.com/greencomfytea/obs-stats-on-stream/commits/main">
 		<img alt="Last Commit" src="https://custom-icon-badges.demolab.com/github/last-commit/greencomfytea/obs-stats-on-stream?logo=git-commit" />
 	</a>
 	<a href="https://github.com/greencomfytea/obs-stats-on-stream/commits/main">
 		<img alt="Commits Since" src="https://custom-icon-badges.demolab.com/github/commits-since/greencomfytea/obs-stats-on-stream/latest?logo=git-commit" />
-	</a>
-	<a href="https://github.com/greencomfytea/obs-stats-on-stream/commits/main">
-		<img alt="Commits" src="https://custom-icon-badges.demolab.com/github/commit-activity/t/greencomfytea/obs-stats-on-stream?logo=git-commit" />
 	</a>
 	<br>
 	<a href="https://github.com/greencomfytea/obs-stats-on-stream/graphs/commit-activity">
