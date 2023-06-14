@@ -50,6 +50,27 @@
 	</a>
 	<br>
 	<br>
+	<a href="https://github.com/greencomfytea/obs-stats-on-stream/commits/main">
+		<img alt="Commits" src="https://custom-icon-badges.demolab.com/github/commit-activity/t/greencomfytea/obs-stats-on-stream?logo=git-commit" />
+	</a>
+	<a href="https://github.com/greencomfytea/obs-stats-on-stream/commits/main">
+		<img alt="Last Commit" src="https://custom-icon-badges.demolab.com/github/last-commit/greencomfytea/obs-stats-on-stream?logo=git-commit" />
+	</a>
+	<a href="https://github.com/greencomfytea/obs-stats-on-stream/commits/main">
+		<img alt="Commits Since" src="https://custom-icon-badges.demolab.com/github/commits-since/greencomfytea/obs-stats-on-stream/latest?logo=git-commit" />
+	</a>
+	<br>
+	<a href="https://github.com/greencomfytea/obs-stats-on-stream/graphs/commit-activity">
+		<img alt="Commit Activity (Year)" src="https://custom-icon-badges.demolab.com/github/commit-activity/y/greencomfytea/obs-stats-on-stream?logo=pulse" />
+	</a>
+	<a href="https://github.com/greencomfytea/obs-stats-on-stream/graphs/commit-activity">
+		<img alt="Commit Activity (Month)" src="https://custom-icon-badges.demolab.com/github/commit-activity/m/greencomfytea/obs-stats-on-stream?logo=pulse" />
+	</a>
+	<a href="https://github.com/greencomfytea/obs-stats-on-stream/graphs/commit-activity">
+		<img alt="Commit Activity (Week)" src="https://custom-icon-badges.demolab.com/github/commit-activity/w/greencomfytea/obs-stats-on-stream?logo=pulse" />
+	</a>
+	<br>
+	<br>
 	<a href="">
 		<img alt="Repo Size" src="https://custom-icon-badges.demolab.com/github/repo-size/greencomfytea/obs-stats-on-stream?logo=database" />
 	</a>
@@ -74,27 +95,6 @@
 	</a>
 	<a href="https://github.com/greencomfytea/obs-stats-on-stream/graphs/traffic">
 		<img alt="Hits" src="https://custom-icon-badges.demolab.com/endpoint?url=https://hits.dwyl.com/greencomfytea/obs-stats-on-stream.json?color=blue&logo=eye" />
-	</a>
-	<br>
-	<br>
-	<a href="https://github.com/greencomfytea/obs-stats-on-stream/commits/main">
-		<img alt="Commits" src="https://custom-icon-badges.demolab.com/github/commit-activity/t/greencomfytea/obs-stats-on-stream?logo=git-commit" />
-	</a>
-	<a href="https://github.com/greencomfytea/obs-stats-on-stream/commits/main">
-		<img alt="Last Commit" src="https://custom-icon-badges.demolab.com/github/last-commit/greencomfytea/obs-stats-on-stream?logo=git-commit" />
-	</a>
-	<a href="https://github.com/greencomfytea/obs-stats-on-stream/commits/main">
-		<img alt="Commits Since" src="https://custom-icon-badges.demolab.com/github/commits-since/greencomfytea/obs-stats-on-stream/latest?logo=git-commit" />
-	</a>
-	<br>
-	<a href="https://github.com/greencomfytea/obs-stats-on-stream/graphs/commit-activity">
-		<img alt="Commit Activity (Year)" src="https://custom-icon-badges.demolab.com/github/commit-activity/y/greencomfytea/obs-stats-on-stream?logo=pulse" />
-	</a>
-	<a href="https://github.com/greencomfytea/obs-stats-on-stream/graphs/commit-activity">
-		<img alt="Commit Activity (Month)" src="https://custom-icon-badges.demolab.com/github/commit-activity/m/greencomfytea/obs-stats-on-stream?logo=pulse" />
-	</a>
-	<a href="https://github.com/greencomfytea/obs-stats-on-stream/graphs/commit-activity">
-		<img alt="Commit Activity (Week)" src="https://custom-icon-badges.demolab.com/github/commit-activity/w/greencomfytea/obs-stats-on-stream?logo=pulse" />
 	</a>
 	<br>
 	<br>
