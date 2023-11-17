@@ -64,9 +64,9 @@ function script_handler.tick()
 end
 
 function script_handler.reset_formatting(properties, property)
-	script_handler.text_formatting = default_text_formatting;
+	script_handler.text_formatting = text_source_handler.default_formatting;
 
-	obslua.obs_data_set_string(my_settings, "text_formatting", default_text_formatting);
+	obslua.obs_data_set_string(my_settings, "text_formatting", text_source_handler.default_formatting);
 	obslua.obs_properties_apply_settings(properties, my_settings);
 
 	return true;
