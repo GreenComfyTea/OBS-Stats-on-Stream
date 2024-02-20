@@ -102,7 +102,7 @@ function script_properties()
 	local enable_script_property = obslua.obs_properties_add_bool(properties, "is_script_enabled", "Enable Script");
 	local enable_bot_property = obslua.obs_properties_add_bool(properties, "is_bot_enabled", "Enable Bot");
 
-	local timer_delay_property = obslua.obs_properties_add_int(properties, "timer_delay", "Update Delay (ms)", 100, 2000, 100);
+	local timer_delay_property = obslua.obs_properties_add_int(properties, "timer_delay", "Update Delay (ms)", 100, 10000, 100);
 	obslua.obs_property_set_long_description(timer_delay_property, "Determines how often the data will update.");
 	
 	local bot_delay_property = obslua.obs_properties_add_int(properties, "bot_delay", "Bot Delay (ms)", 500, 5000, 100);
