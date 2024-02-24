@@ -642,7 +642,7 @@ function data.init_module()
 	]]
 
 	if ffi.os == "OSX" then
-		obsffi = ffi.load("obs.0.dylib"); -- OS X
+		obsffi = ffi.load("obs-opengl.dylib"); -- OS X
 	else
 		obsffi = ffi.load("obs"); -- Windows
 		-- Linux?
